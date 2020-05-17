@@ -8,12 +8,18 @@ version = "1.3.0-alpha"
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation project(":key.ui")
+    implementation 'org.key_project:key.ui'
+    implementation 'org.key_project:key.core'
     implementation "com.github.ajalt:clikt:2.3.0"
 }
 
 application {
     mainClassName = "de.uka.ilkd.key.CheckerKt"
+}
+
+repositories {
+	mavenCentral()
+	flatDir { dirs "lib", "key/key/key.core/lib" }
 }
 
 run {
