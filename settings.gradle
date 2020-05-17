@@ -1,2 +1,2 @@
 // link to the current key-build
-includeBuild 'key'
+includeBuild 'key/key'
