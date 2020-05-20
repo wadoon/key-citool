@@ -1,5 +1,5 @@
 
-#KeY: ci-tool 1.1.0
+#KeY: ci-tool 1.3.0
 
 ci-tool is a utility for supporting Java and JML contracts in Continuous Integration pipelines 
 by providing support for checking the proofability of JML with [KeY](https://key-project.org).
@@ -49,8 +49,11 @@ script:
 
 ## Changelog
 
-* [1.3.0-alpha](https://formal.iti.kit.edu/ci-tool/keyext.citool-1.3.0--alpha-all.jar): Adding junit xml output
+* [1.3.0](https://formal.iti.kit.edu/ci-tool/keyext.citool-1.3.0--alpha-all.jar): Adding junit xml output
+  - ci-tool lives now in a standalone repository.
+  - The bug fix for model fields in set statements is revoked, and ci-tool build on KeY's `master` branch.
   - A new option `--xml-output [FILE]` was added. If specified, an XML file is written in the JUnit format.
+  
 
 * [1.2.0](https://formal.iti.kit.edu/ci-tool/keyext.citool-1.2.0-all.jar): Hot-fix for KeY
    - repairing model fields in set statements

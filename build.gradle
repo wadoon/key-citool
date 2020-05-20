@@ -11,6 +11,8 @@ dependencies {
     implementation 'org.key_project:key.ui'
     implementation 'org.key_project:key.core'
     implementation "com.github.ajalt:clikt:2.3.0"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.6.2"
 }
 
 application {
@@ -18,8 +20,17 @@ application {
 }
 
 repositories {
-	mavenCentral()
-	flatDir { dirs "lib", "key/key/key.core/lib" }
+    mavenCentral()
+    flatDir { dirs "lib", "key/key/key.core/lib" }
+}
+
+test {
+    useJUnitPlatform()
+    reports.html.enabled = false
+    reports.junitXml.enabled = true
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 run {

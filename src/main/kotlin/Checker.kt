@@ -100,13 +100,15 @@ class Checker : CliktCommand() {
 
     var errors = 0
 
-    var testSuites = TestSuites(inputFile.joinToString(" "))
+    var testSuites = TestSuites()
 
     override fun run() {
         printm("KeY version: ${KeYConstants.VERSION}")
         printm("KeY internal: ${KeYConstants.INTERNAL_VERSION}")
         printm("Copyright: ${KeYConstants.COPYRIGHT}")
         printm("More information at: https://formal.iti.kit.edu/weigl/ci-tool/")
+
+        testSuites.name = inputFile.joinToString(" ")
 
         inputFile.forEach { run(it) }
 
@@ -338,7 +340,6 @@ private fun Proof.openClosedProgramBranches(): Pair<Int, Int> {
 
 
 //region Measuring
-
 class MeasuringMacro : SequentialProofMacro() {
     val before = Stats()
     val after = Stats()
