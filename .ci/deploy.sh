@@ -11,7 +11,7 @@ rm -rf build/libs/
 cat >build/index.html <<eof
 <html>
 <head>
-<style>body {width:60em; margin:auto;}</style>
+<link rel="stylesheet" href="https://unpkg.com/latex.css/style.min.css" />
 <title>ci-tool</title></head>
 <body>
 eof
