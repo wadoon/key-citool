@@ -10,13 +10,19 @@ plugins {
 
     // Apply the application plugin to add support for building a CLI application.
     application
+
+
+    id("com.github.johnrengelman.shadow") version "5.0.0"
 }
 
 repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
+    mavenCentral()
     jcenter()
 }
+
+ext.ktor_version = '1.2.0'
 
 dependencies {
     // Align versions of all Kotlin components
@@ -30,9 +36,18 @@ dependencies {
 
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
+    implementation("io.ktor:ktor-html-builder:$ktor_version")
+    implementation("org.jetbrains:annotations:15.0")
+    implementation("io.github.microutils:kotlin-logging:1.6.10")
+    implementation("com.github.ajalt:clikt:2.1.0")
+    implementation("org.slf4j:slf4j-simple:1.7.26")
+
 }
 
 application {
     // Define the main class for the application.
-    mainClassName = "key.miniweb.AppKt"
+    mainClassName = 'org.key_project.web.Server' // Starting with 1.0.0-beta-3
 }
