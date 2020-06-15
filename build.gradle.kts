@@ -22,7 +22,7 @@ repositories {
     jcenter()
 }
 
-ext.ktor_version = '1.2.0'
+val ktor_version = "1.3.2"
 
 dependencies {
     // Align versions of all Kotlin components
@@ -37,6 +37,7 @@ dependencies {
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 
+    implementation("org.key_project:key.core")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-html-builder:$ktor_version")
@@ -47,7 +48,12 @@ dependencies {
 
 }
 
+repositories {
+    mavenCentral()
+    flatDir { dirs("lib", "key/key/key.core/lib") }
+}
+
 application {
     // Define the main class for the application.
-    mainClassName = 'org.key_project.web.Server' // Starting with 1.0.0-beta-3
+    mainClassName = "org.key_project.web.Server" // Starting with 1.0.0-beta-3
 }

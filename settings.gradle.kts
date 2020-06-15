@@ -8,5 +8,5 @@
  */
 
 rootProject.name = "key-miniweb"
-includeBuild 'key/key'
+includeBuild("key/key")
 
