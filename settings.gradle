@@ -9,4 +9,7 @@
  */
 
 rootProject.name = 'key-tools'
-include('lib')
+include('citool')
+include('tadoc')
+include('miniweb')
+
