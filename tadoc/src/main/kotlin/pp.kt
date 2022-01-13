@@ -386,8 +386,12 @@ class PrettyPrinter(val index: Index,
         if (ctx.INSEQUENTSTATE().isNotEmpty())
             appendn(ctx.INSEQUENTSTATE().first(), "\n")
 
-        if (ctx.VARCOND() != null) {
-            appendn(ctx.VARCOND()).append("(").appendn(ctx.varexplist()).append(")\n")
+        if (ctx.VARCOND().isNotEmpty()) {
+            ctx.VARCOND().forEach {
+                appendn(it)
+            }
+            //appendn(ctx.VARCOND()).append("(")
+            //TODO weigl    .appendn(ctx.varexplist()).append(")\n")
         }
         appendn(ctx.goalspecs())
         appendn(ctx.modifiers())

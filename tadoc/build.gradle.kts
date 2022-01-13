@@ -3,6 +3,10 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
+application {
+    mainClassName = "test"
+}
+
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2")
     implementation("com.atlassian.commonmark:commonmark:0.14.0")

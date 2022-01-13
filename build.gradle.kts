@@ -13,6 +13,7 @@ subprojects {
     repositories {
         mavenCentral()
         maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
+        maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
     }
 
     dependencies {
@@ -22,12 +23,12 @@ subprojects {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
         implementation("com.github.ajalt:clikt:2.8.0")
         implementation("org.jetbrains:annotations:23.0.0")
+        implementation("org.key_project:key.core:2.10.0")
 
         //    implementation("org.key_project:key.core")
 
         val testImplementation by configurations
         testImplementation("org.jetbrains.kotlin:kotlin-test")
-        testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
         testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
     }
 
