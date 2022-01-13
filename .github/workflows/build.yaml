@@ -23,7 +23,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew classes
       - name: Build with Gradle
-        run: ./gradlew verify
+        run: ./gradlew check
       - name: Build with Gradle
         run: ./gradlew package
       - name: Cleanup Gradle Cache
