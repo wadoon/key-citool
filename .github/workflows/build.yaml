@@ -25,7 +25,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew check
       - name: Build with Gradle
-        run: ./gradlew package
+        run: ./gradlew jar
       - name: Cleanup Gradle Cache
         # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
         # Restoring these files from a GitHub Actions cache might cause problems for future builds.
