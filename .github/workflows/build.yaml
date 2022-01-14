@@ -20,11 +20,11 @@ jobs:
           distribution: 'adopt'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
-      - name: Build with Gradle
+      - name: Build
         run: ./gradlew classes
-      - name: Build with Gradle
+      - name: Running Tests
         run: ./gradlew check
-      - name: Build with Gradle
+      - name: Buidl JAR Files
         run: ./gradlew jar
       - name: Cleanup Gradle Cache
         # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
@@ -35,4 +35,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: Package
-          path: build/libs
+          path: build/*/libs/

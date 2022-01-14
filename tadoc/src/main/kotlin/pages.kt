@@ -13,14 +13,14 @@ import org.commonmark.ext.ins.InsExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import org.key_project.core.doc.Markdown.markdown
-import org.key_project.core.doc.org.key_project.core.doc.GitBlameService
 import java.io.File
 import java.util.*
 
 abstract class DefaultPage(
-        val target: File,
-        val pageTitle: String,
-        val index: Index) {
+    val target: File,
+    val pageTitle: String,
+    val index: Index
+) {
     var brandTitle: String = "KeY Logic Documentation"
     var tagLine: String = "Defined symbols in the KeY System"
     val self = target.name
@@ -49,37 +49,37 @@ abstract class DefaultPage(
     abstract fun content(div: DIV)
 
     open fun commonHeader(body: DIV) =
-            body.div("sidebar pure-u-1-4") {
-                div("0header") {
-                    h1("brand-title") { +brandTitle }
-                    h2("brand-tagline") { +tagLine }
+        body.div("sidebar pure-u-1-4") {
+            div("0header") {
+                h1("brand-title") { +brandTitle }
+                h2("brand-tagline") { +tagLine }
 
-                    span { +"Generated from version: $GIT_VERSION on ${Date()}" }
+                span { +"Generated from version: $GIT_VERSION on ${Date()}" }
 
-                    nav("nav") {
-                        ul("nav-list") {
-                            li("nav-item") {
-                                a(classes = "pure-button", href = "index.html") { +"Startpage" }
-                                a(classes = "pure-button", href = "usage.html") { +"Usage Index" }
-                                a(classes = "pure-button", href = "https://key-project.org/docs/") { +"KeY Docs" }
-                            }
-                        }
-                    }
-
-                    h3 { +"Overview" }
-                    nav("nav") {
-                        ul("nav-list") {
-                            navigation()
+                nav("nav") {
+                    ul("nav-list") {
+                        li("nav-item") {
+                            a(classes = "pure-button", href = "index.html") { +"Startpage" }
+                            a(classes = "pure-button", href = "usage.html") { +"Usage Index" }
+                            a(classes = "pure-button", href = "https://key-project.org/docs/") { +"KeY Docs" }
                         }
                     }
                 }
+
+                h3 { +"Overview" }
+                nav("nav") {
+                    ul("nav-list") {
+                        navigation()
+                    }
+                }
             }
+        }
 
     open fun UL.navigation() {
         val cat = index.asSequence()
-                .filter { it.url == self }
-                .filter { it.type != Symbol.Type.FILE && it.type != Symbol.Type.EXTERNAL }
-                .groupBy { it.type }
+            .filter { it.url == self }
+            .filter { it.type != Symbol.Type.FILE && it.type != Symbol.Type.EXTERNAL }
+            .groupBy { it.type }
         cat.forEach { c ->
             li() {
                 +c.key.navigationTitle
@@ -96,7 +96,12 @@ abstract class DefaultPage(
         div.div("footer") {
             div("pure-menu pure-menu-horizontal") {
                 ul {
-                    li("pure-menu-item") { a(href = "https://key-project.org/docs/grammar/#how-to-doc", classes = "pure-menu-link") { +"About" } }
+                    li("pure-menu-item") {
+                        a(
+                            href = "https://key-project.org/docs/grammar/#how-to-doc",
+                            classes = "pure-menu-link"
+                        ) { +"About" }
+                    }
                 }
             }
         }
@@ -113,8 +118,7 @@ class IndexPage(target: File, index: Index) : DefaultPage(target, "Index Page", 
         }
     }
 
-    override fun UL.navigation() {
-    }
+    override fun UL.navigation() {}
 
     fun DIV.region(title: Symbol.Type) {
         val types = index.filter { it.type == title }
@@ -137,9 +141,9 @@ class IndexPage(target: File, index: Index) : DefaultPage(target, "Index Page", 
 
 class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : DefaultPage(target, "Usage", index) {
     val usedItems =
-            usageIndex.entries.groupBy { (a, _) -> a.type }
-                    .toList()
-                    .sortedBy { (a, _) -> a }
+        usageIndex.entries.groupBy { (a, _) -> a.type }
+            .toList()
+            .sortedBy { (a, _) -> a }
 
     override fun content(div: DIV) {
         div.div {
@@ -150,29 +154,31 @@ class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : D
         }
     }
 
-    private fun DIV.region(category: Symbol.Type,
-                           usedSymbols: List<MutableMap.MutableEntry<Symbol, MutableList<Symbol>>>) {
+    private fun DIV.region(
+        category: Symbol.Type,
+        usedSymbols: List<MutableMap.MutableEntry<Symbol, MutableList<Symbol>>>
+    ) {
         h2("") {
             id = category.name
             +category.navigationTitle
         }
         section {
             usedSymbols
-                    .sortedBy { (a, _) -> a.displayName }
-                    .forEach { (used, where) ->
-                        h3 { a(href = used.href) { id = used.anchor; +(used.displayName) } }
-                        where.sortedBy { it.displayName }
-                                .distinctBy { it.href }
-                                .forEach {
-                                    ul {
-                                        li {
-                                            a(href = it.href, classes = "symbol ${it.type}") {
-                                                +(it.displayName + " (${it.type}) ")
-                                            }
-                                        }
+                .sortedBy { (a, _) -> a.displayName }
+                .forEach { (used, where) ->
+                    h3 { a(href = used.href) { id = used.anchor; +(used.displayName) } }
+                    where.sortedBy { it.displayName }
+                        .distinctBy { it.href }
+                        .forEach {
+                            ul {
+                                li {
+                                    a(href = it.href, classes = "symbol ${it.type}") {
+                                        +(it.displayName + " (${it.type}) ")
                                     }
                                 }
-                    }
+                            }
+                        }
+                }
         }
     }
 
@@ -182,18 +188,19 @@ class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : D
                 a("#${type.name}") { +type.navigationTitle }
                 ul {
                     seq.sortedBy { (a, _) -> a.displayName }
-                            .forEach { (used, _) ->
-                                li { a(href = "#${used.anchor}", classes = used.type.name) { +(used.displayName) } }
-                            }
+                        .forEach { (used, _) ->
+                            li { a(href = "#${used.anchor}", classes = used.type.name) { +(used.displayName) } }
+                        }
                 }
             }
         }
     }
 }
 
-class DocumentationFile(target: File, val keyFile: File, val ctx: KeYParser.FileContext, index: Index,
-                        val usageIndex: UsageIndex)
-    : DefaultPage(target, "${keyFile.nameWithoutExtension} -- Documentation", index) {
+class DocumentationFile(
+    target: File, val keyFile: File, val ctx: KeYParser.FileContext, index: Index,
+    val usageIndex: UsageIndex
+) : DefaultPage(target, "${keyFile.nameWithoutExtension} -- Documentation", index) {
 
 
     override fun content(div: DIV) {
@@ -209,10 +216,12 @@ class DocumentationFile(target: File, val keyFile: File, val ctx: KeYParser.File
 }
 
 
-class FileVisitor(val self: String,
-                  val tagConsumer: DIV,
-                  val index: Index,
-                  val usageIndex: UsageIndex) : KeYParserBaseVisitor<Unit>() {
+class FileVisitor(
+    val self: String,
+    val tagConsumer: DIV,
+    val index: Index,
+    val usageIndex: UsageIndex
+) : KeYParserBaseVisitor<Unit>() {
 
     private lateinit var symbol: Symbol
     private val printer: PrettyPrinter
@@ -257,7 +266,7 @@ class FileVisitor(val self: String,
                 +ctx.category.text
             }
 
-            ctx.maindoc.forEach { markdown(it)}
+            ctx.maindoc.forEach { markdown(it) }
 
             printDefinition(ctx)
 
@@ -420,39 +429,41 @@ private fun Index.findChoice(text: String?, text1: String?): Symbol? {
 
 
 object Markdown {
-    private val extensions = arrayListOf(TablesExtension.create(),
-            AutolinkExtension.create(),
-            InsExtension.create(),
-            StrikethroughExtension.create())
+    private val extensions = arrayListOf(
+        TablesExtension.create(),
+        AutolinkExtension.create(),
+        InsExtension.create(),
+        StrikethroughExtension.create()
+    )
 
     private val parser = Parser.builder()
-            .extensions(extensions)
-            .build()
+        .extensions(extensions)
+        .build()
+
     private val renderer = HtmlRenderer.builder()
-            .extensions(extensions)
-            .build()
+        .extensions(extensions)
+        .build()
 
     fun DIV.markdown(doc: Token?) {
         if (doc == null) return
         div("markdown") {
             val regex = "^\\s{0,${doc.charPositionInLine}}".toRegex()
             val text = doc.text
-                    .trim('/', '!', '*')
-                    .replace(regex, "")
-                    .replaceAll(replacements)
+                .trim('/', '!', '*')
+                .replace(regex, "")
+                .replaceAll(replacements)
             unsafe { +renderer.render(parser.parse(text)) }
         }
     }
 
     val replacements = listOf(
-            "@choiceDefaultOption" to "This is the default option.",
-            "@choiceUnsound" to """**This option is unsound**""",
-            "@choiceIncomplete" to """**This option is incomplete**"""
+        "@choiceDefaultOption" to "This is the default option.",
+        "@choiceUnsound" to """**This option is unsound**""",
+        "@choiceIncomplete" to """**This option is incomplete**"""
     )
 }
 
 private fun String.replaceAll(replacements: List<Pair<String, String>>): String =
-        replacements.fold(this, {acc, pair -> acc.replace(pair.first, pair.second)})
+    replacements.fold(this) { acc, pair -> acc.replace(pair.first, pair.second) }
 
 private fun Index.lookup(s: Any): Symbol? = this.find { it.ctx == s }
-

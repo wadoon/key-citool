@@ -24,12 +24,14 @@ subprojects {
         implementation("com.github.ajalt:clikt:2.8.0")
         implementation("org.jetbrains:annotations:23.0.0")
         implementation("org.key_project:key.core:2.10.0")
+        implementation("org.slf4j:slf4j-api:1.7.32")
 
         //    implementation("org.key_project:key.core")
 
         val testImplementation by configurations
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
+        testImplementation("org.slf4j:slf4j-simple:1.7.32")
     }
 
     tasks.withType<KotlinCompile> {
