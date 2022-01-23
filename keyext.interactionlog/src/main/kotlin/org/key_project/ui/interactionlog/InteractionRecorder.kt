@@ -91,19 +91,19 @@ class InteractionRecorder : InteractionListener, AutoModeListener {
     }
 
     fun registerOnSettings(proof: Proof) {
-        proof.settings.strategySettings.addSettingsListener { evt ->
+        proof.settings.strategySettings.addSettingsListener {
             settingChanged(proof,
                     proof.settings.strategySettings,
                     InteractionListener.SettingType.STRATEGY, null)
         }
 
-        proof.settings.choiceSettings.addSettingsListener { evt ->
+        proof.settings.choiceSettings.addSettingsListener {
             settingChanged(proof,
                     proof.settings.choiceSettings,
                     InteractionListener.SettingType.CHOICE, null)
         }
 
-        proof.settings.smtSettings.addSettingsListener { evt ->
+        proof.settings.smtSettings.addSettingsListener {
             settingChanged(proof,
                     proof.settings.smtSettings,
                     InteractionListener.SettingType.SMT, null)

@@ -104,19 +104,19 @@ class LogPrinter(private val services: Services) {
 
 
         fun getBranchingLabel(node: Node?): String {
-            var node = node
+            var n = node
             val sb = StringBuilder()
-            while (node != null) {
-                val p = node.parent()
+            while (n != null) {
+                val p = n.parent()
                 if (p != null && p.childrenCount() != 1) {
-                    val branchLabel = node.nodeInfo.branchLabel
+                    val branchLabel = n.nodeInfo.branchLabel
                     sb.append(if (branchLabel != null && !branchLabel.isEmpty())
                         branchLabel
                     else
-                        "#" + p.getChildNr(node))
+                        "#" + p.getChildNr(n))
                             .append(SEPARATOR)
                 }
-                node = p
+                n = p
             }
             sb.append(END_MARKER)
             return sb.toString()
