@@ -23,8 +23,12 @@ and also apply the stored interactions on different proofs.
 2. Add this Jar file into the KeY's classpath: 
 
    ```
-   $ java -cp key.ui-2.11.0-jar:interactionlog-1.0-SNAPSHOT-all.jar
+   $ export KEYJAR=key.ui-2.11.0-exe.jar
+   $ export INTERLOGJAR=interactionlog-1.0-SNAPSHOT-all.jar
+   $ java -cp $KEYJAR:$INTERLOGJAR de.uka.ilkd.key.core.Main --experimental
    ```
+   
+   `--experimental` currently needed, will be unnecessary if version 1.0 is reached. 
    
    Interaction Log should be automatically loaded.
 
@@ -49,6 +53,11 @@ repositories {
 ```
 
 [The packages are hosted at Github](https://github.com/wadoon/key-tools/packages/1213432).
+
+## History
+
+* Version: 0.9 (not finally released)  
+  - The plugin was migrated to this repository to make it finally freely available.
 
 
 ## User Interface
