@@ -2,5 +2,5 @@ rootProject.name = 'key-tools'
 include('citool')
 include('tadoc')
 include('miniweb')
-include('keyext.interactionlog')
+include('interactionlog')
 

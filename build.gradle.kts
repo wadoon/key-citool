@@ -1,16 +1,21 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-repositories {
-    mavenCentral()
-}
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.5.31" apply (false)
     id("org.jetbrains.dokka") version "1.6.10" apply (false)
+    `maven-publish`
+    `java-library`
+}
+
+repositories {
+    mavenCentral()
 }
 
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "org.jetbrains.dokka")
+    apply(plugin = "maven-publish")
+    apply(plugin = "java-library")
 
     repositories {
         mavenCentral()
@@ -55,5 +60,53 @@ subprojects {
             showExceptions = true
         }
     }
-}
 
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    tasks.withType<Javadoc>()  {
+        isFailOnError = false
+    }
+
+
+    publishing {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                from(components["java"])
+                pom {
+                    url.set("http://github.com/wadoon/key-tools")
+                    licenses {
+                        license {
+                            name.set("GPLv2+")
+                            url.set("https://www.gnu.org/licenses/old-licenses/gpl-2.0.html")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id.set("weigl")
+                            name.set("Alexander Weigl ")
+                            email.set("weigl@kit.edu")
+                        }
+                    }
+                    scm {
+                        connection.set("scm:git:https://github.com/wadoon/key-tools.git")
+                        developerConnection.set("scm:git:git@github.com:wadoon/key-tools.git")
+                        url.set("http://github.com/wadoon/key-tools")
+                    }
+                }
+            }
+            repositories {
+                maven {
+                    name = "GitHubPackages"
+                    url = uri("https://maven.pkg.github.com/wadoon/key-tools")
+                    credentials {
+                        username = System.getenv("GITHUB_ACTOR")
+                        password = System.getenv("GITHUB_TOKEN")
+                    }
+                }
+            }
+        }
+    }
+}

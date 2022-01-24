@@ -2,6 +2,9 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
+group = "com.github.wadoon.keytools"
+version = "0.9"
+
 configurations {
     val plugin = create("plugin")
     implementation.extendsFrom(plugin)
@@ -19,7 +22,7 @@ dependencies {
     implementation("org.key_project:key.ui:2.11.0-SNAPSHOT")
     implementation("org.slf4j:slf4j-api:1.7.33")
 
-    testImplementation("org.slf4j:slf4j-simple:1.7.32")
+    testImplementation("org.slf4j:slf4j-simple:1.7.33")
 
     val plugin by configurations
     plugin("com.atlassian.commonmark:commonmark:0.17.0")
