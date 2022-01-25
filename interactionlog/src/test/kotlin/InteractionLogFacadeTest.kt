@@ -1,4 +1,6 @@
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.key_project.ui.interactionlog.InteractionLogFacade
 import org.key_project.ui.interactionlog.model.InteractionLog
 import org.key_project.ui.interactionlog.model.OSSBuiltInRuleInteraction
@@ -18,22 +20,22 @@ class InteractionLogFacadeTest {
         println(file)
         println(file.readText())
 
-        Assert.assertTrue(file.exists())
+        assertTrue(file.exists())
 
         val readIl = InteractionLogFacade.readInteractionLog(file)
-        Assert.assertEquals(il.interactions.size, readIl.interactions.size)
-        Assert.assertEquals(il.name, readIl.name)
+        assertEquals(il.interactions.size, readIl.interactions.size)
+        assertEquals(il.name, readIl.name)
 
         return readIl
     }
 
-    @org.junit.Test
+    @Test
     fun storeAndReadInteractionLogEmpty() {
         val il = InteractionLog()
         writeAndReadInteractionLog(il)
     }
 
-    @org.junit.Test
+    @Test
     fun storeAndReadOss() {
         val il = InteractionLog()
         il.add(OSSBuiltInRuleInteraction())
@@ -41,7 +43,7 @@ class InteractionLogFacadeTest {
         il.add(PruneInteraction())
         val ol = writeAndReadInteractionLog(il)
         println(ol.interactions)
-        Assert.assertEquals(3, ol.interactions.size)
+        assertEquals(3, ol.interactions.size)
     }
 
 }

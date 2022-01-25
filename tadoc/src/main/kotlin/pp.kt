@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.key_project.core.doc.Symbol.Type.SORT
+import org.key_project.core.doc.org.key_project.core.doc.App
 import java.util.*
 import kotlin.collections.HashMap
 
