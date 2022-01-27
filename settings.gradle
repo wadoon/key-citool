@@ -3,4 +3,5 @@ include('citool')
 include('tadoc')
 include('miniweb')
 include('interactionlog')
+include('ide')
 
