@@ -224,8 +224,8 @@ class FileVisitor(
 ) : KeYParserBaseVisitor<Unit>() {
 
     private lateinit var symbol: Symbol
-    private val printer: PrettyPrinter
-        get() = PrettyPrinter(index, symbol, true, usageIndex)
+    private val printer: PrettyPrinterStr
+        get() = PrettyPrinterStr(index, symbol, true, usageIndex)
 
     override fun visitFile(ctx: KeYParser.FileContext) {
         symbol = index.lookup(ctx)!!
