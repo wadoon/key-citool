@@ -31,6 +31,6 @@ class PPrintTest {
             Symbol("Test", "xxx", type = Symbol.Type.FILE),
             hashMapOf()
         )
-        println(txt)
+        println("TXT: $txt")
     }
 }

@@ -13,6 +13,7 @@ import org.commonmark.ext.ins.InsExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
 import org.key_project.core.doc.Markdown.markdown
+import org.key_project.core.doc.org.key_project.core.doc.GenDocStep
 import java.io.File
 import java.util.*
 
@@ -20,12 +21,15 @@ abstract class DefaultPage(
     val target: File,
     val pageTitle: String,
     val index: Index
-) {
+) : GenDocStep {
     var brandTitle: String = "KeY Logic Documentation"
     var tagLine: String = "Defined symbols in the KeY System"
     val self = target.name
 
-    operator fun invoke() {
+    override fun prepare() {
+    }
+
+    override fun manifest() {
         target.bufferedWriter().use {
             it.appendHTML(true).html {
                 head {

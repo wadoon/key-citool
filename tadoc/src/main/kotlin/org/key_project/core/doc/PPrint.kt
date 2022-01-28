@@ -201,7 +201,7 @@ sealed class Document {
 }
 
 /* Retrieving or computing the space Requirement of a document. */
-fun Requirement(x: Document): Requirement =
+tailrec fun Requirement(x: Document): Requirement =
     when (x) {
         is Empty -> Requirement(0)
         is Document.Char -> Requirement(1)
@@ -347,9 +347,131 @@ tailrec fun proceed(output: PrintWriter, state: State, x: Continuation) {
         is KNil -> Unit
         is KCons -> pretty(output, state, x.indent, x.flatten, x.doc, x.cont)
         is KRange -> {
-            val finish: Point = state.line to state.column
-            x.hook(x.start to finish)
-            proceed(output, state, x.cont)
+            var y = x
+            while (y is KRange) {
+                val finish: Point = state.line to state.column
+                y.hook(y.start to finish)
+                y = y.cont
+            }
+            if (y is KCons) {
+                pretty(output, state, y.indent, y.flatten, y.doc, y.cont)
+            }
+        }
+    }
+}
+
+tailrec fun prettyQ(
+    output: PrintWriter, state: State,
+    indent: Int, flatten: Boolean, doc: Document
+) {
+    val queue = ArrayDeque<Continuation>(1024)
+    queue.add(KCons(indent, flatten, doc, KNil))
+
+    fun proceed(x: Continuation) {
+        queue.push(x)
+    }
+
+    fun handle(indent: Int, flatten: Boolean, doc: Document, cont: Continuation) =
+        when (doc) {
+            is Empty -> {}
+            is Document.Char -> {
+                output.print(doc.char)
+                state.column = state.column + 1
+                proceed(cont)
+            }
+            is Document.String -> {
+                output.print(doc.s.substring(0, doc.s.length))
+                state.column = state.column + doc.s.length
+                /* assert (ok state flatten); */
+                proceed(cont)
+            }
+            is FancyString -> {
+                output.print(doc.s.substring(doc.ofs, doc.len))
+                state.column = state.column + doc.apperentLength
+                /* assert (ok state flatten); */
+                proceed(cont)
+            }
+            is Blank -> {
+                output.print(" ".repeat(doc.len))
+                state.column = state.column + doc.len
+                /* assert (ok state flatten); */
+                proceed(cont)
+            }
+            is HardLine -> {
+                /* We cannot be in flattening mode, because a hard line has an [infinity]
+                   Requirement, and we attempt to render a group in flattening mode only
+                   if this group's Requirement is met. */
+                require(!flatten)
+                /* Emit a hardline. */
+                output.print("\n")
+                output.print(" ".repeat(indent))
+                state.line = state.line + 1
+                state.column = indent
+                state.lastIndent = indent
+                proceed(cont)
+            }
+            is IfFlat -> {
+                /* Pick an appropriate sub-document, based on the current flattening mode. */
+                proceed(KCons(indent, flatten, if (flatten) doc.doc1 else doc.doc2, cont))
+            }
+            is Cat ->
+                /* Push the second document onto the continuation. */
+                proceed(
+                    KCons(
+                        indent, flatten, doc.doc1,
+                        KCons(indent, flatten, doc.doc2, cont)
+                    )
+                )
+
+            is Nest ->
+                proceed(KCons(indent + doc.j, flatten, doc.doc, cont))
+
+            is Group -> {
+                /* If we already are in flattening mode, stay in flattening mode; we
+                are committed to it. If we are not already in flattening mode, we
+                have a choice of entering flattening mode. We enter this mode only
+                if we know that this group fits on this line without violating the
+                width or ribbon width constraints. Thus, we never backtrack. */
+                val column = Requirement(state.column) + doc.req
+                val flatten2 = flatten || column <= state.width && column <= state.lastIndent + state.ribbon
+                proceed(KCons(indent, flatten2, doc.doc, cont))
+            }
+            is Align ->
+                /* The effect of this combinator is to set [indent] to [state.column].
+                Usually [indent] is equal to [state.last_indent], hence setting it
+                to [state.column] increases it. However, if [nest] has been used
+                since the current line began, then this could cause [indent] to
+                decrease. */
+                /* assert (state.column > state.last_indent); */
+                proceed(KCons(state.column, flatten, doc.doc, cont))
+
+            is Range -> {
+                val start: Point = state.line to state.column
+                proceed(KCons(state.column, flatten, doc.doc, KRange(doc.fn, start, cont)))
+            }
+            is Custom -> {
+                /* Invoke the document's custom rendering function. */
+                doc.doc.pretty(output, state, indent, flatten)
+                /* Sanity check. */
+                //assert(ok state flatten);
+                /* __continue. */
+                proceed(cont)
+            }
+        }
+
+    while (queue.isNotEmpty()) {
+        val x = queue.pop()
+        when (x) {
+            is KNil -> return
+            is KCons -> {
+                handle(x.indent, x.flatten, x.doc, x.cont)
+                //queue.addLast(x.cont)
+            }
+            is KRange -> {
+                val finish: Point = state.line to state.column
+                x.hook(x.start to finish)
+                proceed(x.cont)
+            }
         }
     }
 }
@@ -432,7 +554,7 @@ tailrec fun pretty(
             since the current line began, then this could cause [indent] to
             decrease. */
             /* assert (state.column > state.last_indent); */
-            pretty(output, state, state.column, flatten, doc, cont)
+            pretty(output, state, state.column, flatten, doc.doc, cont)
 
         is Range -> {
             val start: Point = state.line to state.column
@@ -598,7 +720,6 @@ fun separate(sep: Document, docs: List<Document>): Document =
 fun <T> concat_map(f: (T) -> Document, xs: List<T>) = xs.map(f).reduce(::cat)
 
 fun <T> concat_map(xs: List<T>, f: (T) -> Document) = xs.map(f).reduce(::cat)
-
 
 
 fun <T> separate_map(sep: Document, xs: List<T>, f: (T) -> Document) = separate_map(sep, f, xs)

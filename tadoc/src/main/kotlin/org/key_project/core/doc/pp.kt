@@ -10,20 +10,25 @@ import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.key_project.core.doc.Symbol.Type.SORT
 import org.key_project.core.doc.org.key_project.core.doc.App
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.util.*
 
 
 const val INDENT = 4
 
 fun pretty(ctx: ParserRuleContext, index: Index, currentContext: Symbol, usageIndex: UsageIndex): String {
-    val d: Document = ctx.accept(PrettyPrinterDoc(index, currentContext, true, usageIndex))
-    return pretty(d, 80)
+    val d: Document = ctx.accept(PrettyPrinterDoc(index, currentContext, false, false, usageIndex))
+    val sw = StringWriter()
+    prettyQ(PrintWriter(sw), State(80, 0.8), 0, false, d)
+    return sw.toString()
 }
 
 class PrettyPrinterDoc(
     val index: Index,
     val currentContext: Symbol,
-    val printReferences: Boolean = true,
+    val printReferences: Boolean = false,
+    val printColor: Boolean = false,
     private val usageIndex: UsageIndex = HashMap()
 ) : KeYParserBaseVisitor<Document>() {
     private val vocabulary = KeYLexer(CharStreams.fromString("")).vocabulary
@@ -47,12 +52,15 @@ class PrettyPrinterDoc(
         val text = if (s != null && printReferences)
             "<a class=\"token\" href=\"${s.href}\">${t.text}</a> "
         else
-            "${t.text} "
+            "${t.text}"
         return printSpan(text, vocabulary.getDisplayName(t.type))
     }
 
     private fun printSpan(text: String, classes: String) =
-        fancystring("<span class=\"token $classes\">${text}</span>", text.length)
+        if (printColor)
+            fancystring("<span class=\"token $classes\">${text}</span>", text.length)
+        else
+            string(text)
 
     private val rainbowColors = arrayOf(
         "#458588",
@@ -76,26 +84,34 @@ class PrettyPrinterDoc(
     private val parenthesisIds = LinkedList<Int>()
     private var parenthesisCounter = 0
     private fun openParenthesis(token: Token): Document {
-        val p = ++parenthesisCounter
-        parenthesisIds.push(p)
-        val c = rainbowColors[p % rainbowColors.size]
-        return fancystring(
-            "<span style=\"color:$c\" class=\"paired-element\" id=\"open-${p}\" mouseover=\"highlight(${p})\">${token.text}</span>",
-            token.text.length
-        )
+        if (printColor) {
+            val p = ++parenthesisCounter
+            parenthesisIds.push(p)
+            val c = rainbowColors[p % rainbowColors.size]
+            return fancystring(
+                "<span style=\"color:$c\" class=\"paired-element\" id=\"open-${p}\" mouseover=\"highlight(${p})\">${token.text}</span>",
+                token.text.length
+            )
+        } else {
+            return string(token.text)
+        }
     }
 
     private fun closeParenthesis(token: Token): Document {
-        val pop = parenthesisIds.pop()
-        val c = rainbowColors[pop % rainbowColors.size]
-        return fancystring(
-            "<span style=\"color:$c\" class=\"paired-element\" id=\"close-$pop\" mouseover=\"highlight($pop)\">${token.text}</span>",
-            token.text.length
-        )
+        if (printColor) {
+            val pop = parenthesisIds.pop()
+            val c = rainbowColors[pop % rainbowColors.size]
+            return fancystring(
+                "<span style=\"color:$c\" class=\"paired-element\" id=\"close-$pop\" mouseover=\"highlight($pop)\">${token.text}</span>",
+                token.text.length
+            )
+        } else {
+            return string(token.text)
+        }
 
     }
 
-    override fun defaultResult() = space
+    override fun defaultResult() = empty
 
     override fun visitProblem(ctx: KeYParser.ProblemContext?): Document {
         return super.visitProblem(ctx)
