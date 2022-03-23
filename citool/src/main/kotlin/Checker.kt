@@ -22,6 +22,7 @@ import de.uka.ilkd.key.parser.Location
 import de.uka.ilkd.key.proof.Goal
 import de.uka.ilkd.key.proof.Node
 import de.uka.ilkd.key.proof.Proof
+import de.uka.ilkd.key.proof.Statistics
 import de.uka.ilkd.key.prover.ProverTaskListener
 import de.uka.ilkd.key.settings.ChoiceSettings
 import de.uka.ilkd.key.settings.ProofSettings
@@ -30,6 +31,7 @@ import de.uka.ilkd.key.util.KeYConstants
 import de.uka.ilkd.key.util.MiscTools
 import org.key_project.util.collection.ImmutableList
 import java.io.File
+import java.util.TreeMap
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
@@ -49,44 +51,68 @@ fun color(s: Any, c: Int) = "${ESC}[${c}m$s${ESC}[0m"
  * @version 1 (21.11.19)
  */
 class Checker : CliktCommand() {
+    private val statistics = TreeMap<String, Any>()
+
     val junitXmlOutput by option("--xml-output").file()
 
-    val enableMeasuring: Boolean by option("--measuring",
-            help = "try to measure proof coverage").flag()
+    val enableMeasuring: Boolean by option(
+        "--measuring",
+        help = "try to measure proof coverage"
+    ).flag()
 
     val includes by option(
-            help = "defines additional key files to be included"
+        help = "defines additional key files to be included"
     ).multiple()
-    val autoModeStep by option("--auto-mode-max-step", metavar = "INT",
-            help = "maximal amount of steps in auto-mode [default:10000]")
-            .int().default(10000)
+    val autoModeStep by option(
+        "--auto-mode-max-step", metavar = "INT",
+        help = "maximal amount of steps in auto-mode [default:10000]"
+    )
+        .int().default(10000)
     val verbose by option("-v", "--verbose", help = "verbose output, currently unused")
-            .flag("--no-verbose")
-    val dryRun by option("--dry-run",
-            help = "skipping the proof reloading, scripts execution and auto mode." +
-                    " Useful for finding the contract names").flag()
+        .flag("--no-verbose")
 
-    val classpath by option("--classpath", "-cp",
-            help = "additional classpaths").multiple()
+    val statisticsFile: File? by option("-s", "--statistics", help = "if set, JSON files with proof statistics are written")
+        .file()
 
-    val bootClassPath by option("--bootClassPath", "-bcp",
-            help = "set the bootclasspath")
+    val dryRun by option(
+        "--dry-run",
+        help = "skipping the proof reloading, scripts execution and auto mode." +
+                " Useful for finding the contract names"
+    ).flag()
 
-    val onlyContracts by option("--contract",
-            help = "whitelist contracts by their names")
-            .multiple()
+    val classpath by option(
+        "--classpath", "-cp",
+        help = "additional classpaths"
+    ).multiple()
 
-    val forbidContracts by option("--forbid-contact",
-            help = "forbid contracts by their name")
-            .multiple()
+    val bootClassPath by option(
+        "--bootClassPath", "-bcp",
+        help = "set the bootclasspath"
+    )
 
-    val inputFile by argument("JAVA-KEY-FILE",
-            help = "key, java or a folder")
-            .multiple(true)
+    val onlyContracts by option(
+        "--contract",
+        help = "whitelist contracts by their names"
+    )
+        .multiple()
 
-    val proofPath by option("--proof-path",
-            help = "folders to look for proofs and script files")
-            .multiple()
+    val forbidContracts by option(
+        "--forbid-contact",
+        help = "forbid contracts by their name"
+    )
+        .multiple()
+
+    val inputFile by argument(
+        "JAVA-KEY-FILE",
+        help = "key, java or a folder"
+    )
+        .multiple(true)
+
+    val proofPath by option(
+        "--proof-path",
+        help = "folders to look for proofs and script files"
+    )
+        .multiple()
 
     private var choiceSettings: ChoiceSettings? = null
 
@@ -111,6 +137,8 @@ class Checker : CliktCommand() {
         testSuites.name = inputFile.joinToString(" ")
 
         inputFile.forEach { run(it) }
+
+        statisticsFile?.writeText(obj2json(statistics))
 
         junitXmlOutput?.let { file ->
             file.bufferedWriter().use {
@@ -141,12 +169,12 @@ class Checker : CliktCommand() {
     fun run(inputFile: String) {
         printBlock("[INFO] Start with `$inputFile`") {
             val pm = KeYApi.loadProof(File(inputFile),
-                    classpath.map { File(it) },
-                    bootClassPath?.let { File(it) },
-                    includes.map { File(it) })
+                classpath.map { File(it) },
+                bootClassPath?.let { File(it) },
+                includes.map { File(it) })
 
             val contracts = pm.proofContracts
-                    .filter { it.name in onlyContracts || onlyContracts.isEmpty() }
+                .filter { it.name in onlyContracts || onlyContracts.isEmpty() }
 
             printm("[INFO] Found: ${contracts.size}")
             var successful = 0
@@ -186,16 +214,18 @@ class Checker : CliktCommand() {
                     }
                 }
             }
-            printm("[INFO] Summary for $inputFile: " +
-                    "(successful/ignored/failure) " +
-                    "(${color(successful, GREEN)}/${color(ignored, BLUE)}/${color(failure, RED)})")
+            printm(
+                "[INFO] Summary for $inputFile: " +
+                        "(successful/ignored/failure) " +
+                        "(${color(successful, GREEN)}/${color(ignored, BLUE)}/${color(failure, RED)})"
+            )
             if (failure != 0)
                 printm("[ERR ] $inputFile failed!", fg = RED)
         }
     }
 
-    private fun runContract(pm: ProofManagementApi, c: Contract?, filename: String): Boolean {
-        val proofApi = pm.startProof(c)
+    private fun runContract(pm: ProofManagementApi, contract: Contract, filename: String): Boolean {
+        val proofApi = pm.startProof(contract)
         val proof = proofApi.proof
         require(proof != null)
         proof.settings?.strategySettings?.maxSteps = autoModeStep
@@ -205,6 +235,7 @@ class Checker : CliktCommand() {
         val scriptFile = findScriptFile(filename)
         val ui = proofApi.env.ui as AbstractUserInterfaceControl
         val pc = proofApi.env.proofControl as AbstractProofControl
+
 
         val closed = when {
             proofFile != null -> {
@@ -285,6 +316,9 @@ class Checker : CliktCommand() {
 
 
     private fun printStatistics(proof: Proof) {
+        if (statisticsFile != null) {
+            statistics[proof.name().toString()] = obj2json(generateSummary(proof))
+        }
         if (verbose) {
             proof.statistics.summary.forEach { p -> printm("[FINE] ${p.first} = ${p.second}") }
         }
@@ -309,9 +343,11 @@ class Checker : CliktCommand() {
         candidates
     }
 
-    private fun findProofFile(filename: String): String? = proofFileCandidates.find { it.startsWith(filename) && (it.endsWith(".proof") || it.endsWith(".proof.gz")) }
+    private fun findProofFile(filename: String): String? =
+        proofFileCandidates.find { it.startsWith(filename) && (it.endsWith(".proof") || it.endsWith(".proof.gz")) }
 
-    private fun findScriptFile(filename: String): String? = proofFileCandidates.find { it.startsWith(filename) && (it.endsWith(".txt") || it.endsWith(".pscript")) }
+    private fun findScriptFile(filename: String): String? =
+        proofFileCandidates.find { it.startsWith(filename) && (it.endsWith(".txt") || it.endsWith(".pscript")) }
 }
 
 fun main(args: Array<String>) = Checker().main(args)
@@ -323,7 +359,7 @@ private val Goal.pathToRoot: Sequence<Node>
 
 private fun Proof.openClosedProgramBranches(): Pair<Int, Int> {
     val branchingNodes = this.root().subtreeIterator().asSequence()
-            .filter { it.childrenCount() > 1 }
+        .filter { it.childrenCount() > 1 }
     val programBranchingNodes = branchingNodes.filter {
         val childStmt = it.childrenIterator().asSequence().map { child ->
             child.nodeInfo.activeStatement
@@ -338,6 +374,40 @@ private fun Proof.openClosedProgramBranches(): Pair<Int, Int> {
     return diverseProgramBranches.count() to programBranchingNodes.count()
 }
 
+/**
+ * Copied from KeY, but provide a better map
+ */
+private fun generateSummary(proof: Proof): HashMap<String, Any> {
+    val result = HashMap<String, Any>()
+    val stat: Statistics = proof.statistics
+    result["Nodes"] = stat.nodes
+    result["Branches"] = stat.branches;
+    result["Interactive steps"] = stat.interactiveSteps
+    result["Symbolic execution steps"] = stat.symbExApps
+    result["Automode time"] = proof.autoModeTime
+    result["Avg. time per step"] = stat.timePerStepInMillis
+    result["Quantifier instantiations"] = stat.quantifierInstantiations
+    result["One-step Simplifier apps"] = stat.ossApps
+    result["SMT solver apps"] = stat.smtSolverApps
+    result["Dependency Contract apps"] = stat.dependencyContractApps
+    result["Operation Contract apps"] = stat.operationContractApps
+    result["Block/Loop Contract apps"] = stat.blockLoopContractApps
+    result["Loop invariant apps"] = stat.loopInvApps
+    result["Merge Rule apps"] = stat.mergeRuleApps
+    result["Total rule apps"] = stat.totalRuleApps
+    result["Interactive Rule Apps"] = stat.interactiveAppsDetails
+    return result
+}
+
+private fun obj2json(any: Any?): String =
+    when (any) {
+        null -> "null"
+        is String -> "\"$any\""
+        is Long, Int, Float, Double -> any.toString()
+        is Map<*, *> -> "{${any.entries.joinToString(",\n") { (k, v) -> "\"$k\" : ${obj2json(v)}" }}}"
+        is List<*> -> "[${any.joinToString(",") { obj2json(it) }}]"
+        else -> any.toString()
+    }
 
 //region Measuring
 class MeasuringMacro : SequentialProofMacro() {
@@ -350,10 +420,10 @@ class MeasuringMacro : SequentialProofMacro() {
 
     override fun createProofMacroArray(): Array<ProofMacro> {
         return arrayOf(
-                AutoPilotPrepareProofMacro(),
-                GatherStatistics(before),
-                AutoMacro(), //or TryCloseMacro()?
-                GatherStatistics(after)
+            AutoPilotPrepareProofMacro(),
+            GatherStatistics(before),
+            AutoMacro(), //or TryCloseMacro()?
+            GatherStatistics(after)
         )
     }
 }
@@ -365,15 +435,19 @@ class GatherStatistics(val stats: Stats) : SkipMacro() {
     override fun getCategory() = "ci-only"
     override fun getDescription() = "stat purpose"
 
-    override fun canApplyTo(proof: Proof?,
-                            goals: ImmutableList<Goal?>?,
-                            posInOcc: PosInOccurrence?): Boolean = true
+    override fun canApplyTo(
+        proof: Proof?,
+        goals: ImmutableList<Goal?>?,
+        posInOcc: PosInOccurrence?
+    ): Boolean = true
 
-    override fun applyTo(uic: UserInterfaceControl?,
-                         proof: Proof,
-                         goals: ImmutableList<Goal?>?,
-                         posInOcc: PosInOccurrence?,
-                         listener: ProverTaskListener?): ProofMacroFinishedInfo? { // do nothing
+    override fun applyTo(
+        uic: UserInterfaceControl?,
+        proof: Proof,
+        goals: ImmutableList<Goal?>?,
+        posInOcc: PosInOccurrence?,
+        listener: ProverTaskListener?
+    ): ProofMacroFinishedInfo? { // do nothing
         stats.openGoals = proof.openGoals().size()
         stats.closedGoals = proof.getClosedSubtreeGoals(proof.root()).size()
         return super.applyTo(uic, proof, goals, posInOcc, listener)

@@ -5,14 +5,10 @@ plugins {
 group = "com.github.wadoon.keytools"
 version = "0.9"
 
-configurations {
-    val plugin = create("plugin")
-    implementation.extendsFrom(plugin)
-}
+val plugin by configurations
 
 tasks.getByName<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    val cfg = project.configurations.getByName("plugin")
-    configurations = listOf(cfg)
+    configurations = listOf(plugin)
 }
 
 

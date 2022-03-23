@@ -17,6 +17,12 @@ subprojects {
     apply(plugin = "maven-publish")
     apply(plugin = "java-library")
 
+    val plugin by configurations.creating
+    configurations {
+        implementation.get().extendsFrom(plugin)
+    }
+
+
     repositories {
         mavenCentral()
         maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
@@ -26,11 +32,12 @@ subprojects {
     dependencies {
         val implementation by configurations
 
-        implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-        implementation("com.github.ajalt:clikt:2.8.0")
-        implementation("org.jetbrains:annotations:23.0.0")
-        implementation("org.slf4j:slf4j-api:1.7.33")
+        val plugin by configurations
+        plugin(platform("org.jetbrains.kotlin:kotlin-bom"))
+        plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+        plugin("com.github.ajalt:clikt:2.8.0")
+        plugin("org.jetbrains:annotations:23.0.0")
+        plugin("org.slf4j:slf4j-api:1.7.33")
 
         //    implementation("org.key_project:key.core")
 
