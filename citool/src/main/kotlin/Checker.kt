@@ -317,7 +317,7 @@ class Checker : CliktCommand() {
 
     private fun printStatistics(proof: Proof) {
         if (statisticsFile != null) {
-            statistics[proof.name().toString()] = obj2json(generateSummary(proof))
+            statistics[proof.name().toString()] = generateSummary(proof)
         }
         if (verbose) {
             proof.statistics.summary.forEach { p -> printm("[FINE] ${p.first} = ${p.second}") }
@@ -399,7 +399,7 @@ private fun generateSummary(proof: Proof): HashMap<String, Any> {
     return result
 }
 
-private fun obj2json(any: Any?): String =
+internal fun obj2json(any: Any?): String =
     when (any) {
         null -> "null"
         is String -> "\"$any\""
