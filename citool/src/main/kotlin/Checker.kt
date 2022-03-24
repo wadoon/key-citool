@@ -63,6 +63,7 @@ class Checker : CliktCommand() {
     val includes by option(
         help = "defines additional key files to be included"
     ).multiple()
+
     val autoModeStep by option(
         "--auto-mode-max-step", metavar = "INT",
         help = "maximal amount of steps in auto-mode [default:10000]"
@@ -75,6 +76,12 @@ class Checker : CliktCommand() {
     val debug by option("-d", "--debug", help = "more verbose output")
         .flag("--no-debug")
 
+
+    val disableAutoMode by option(
+        "--no-auto-mode",
+        help = "If set, only contracts with a proof script or proof are replayed."
+    )
+        .flag()
 
     val statisticsFile: File? by option(
         "-s",
@@ -218,14 +225,15 @@ class Checker : CliktCommand() {
                             ignored++
                         }
                         else -> {
-                            if(debug) printm("Search for ${filename} in proof path")
+                            if (debug) printm("Search for ${filename} in proof path")
                             val b = runContract(pm, c, filename)
-                            if (b) {
-                                //testCase.result = TestCaseKind.Skipped("Contract excluded by `--forbid-contract`.")
-                                successful++
-                            } else {
-                                testCase.result = TestCaseKind.Failure("Proof not closeable.")
-                                failure++
+                            when (b) {
+                                ProofState.Success -> successful++
+                                ProofState.Failed -> {
+                                    testCase.result = TestCaseKind.Failure("Proof not closeable.")
+                                    failure++
+                                }
+                                ProofState.Skipped -> ignored++
                             }
                         }
                     }
@@ -241,7 +249,7 @@ class Checker : CliktCommand() {
         }
     }
 
-    private fun runContract(pm: ProofManagementApi, contract: Contract, filename: String): Boolean {
+    private fun runContract(pm: ProofManagementApi, contract: Contract, filename: String): ProofState {
         val proofApi = pm.startProof(contract)
         val proof = proofApi.proof
         require(proof != null)
@@ -266,23 +274,30 @@ class Checker : CliktCommand() {
             else -> {
                 if (verbose)
                     printm("[INFO] No proof or script found. Fallback to auto-mode.")
-                runAutoMode(pc, proof)
+                if (disableAutoMode) {
+                    printm("[WARN] Proof skipped because to `--no-auto-mode' switch is set.")
+                    ProofState.Skipped
+                } else {
+                    runAutoMode(pc, proof)
+                }
             }
         }
 
-        if (closed) {
-            printm("[OK  ] ✔ Proof closed.", fg = GREEN)
-        } else {
-            errors++
-            printm("[ERR ] ✘ Proof open.", fg = RED)
-            if (verbose)
-                printm("[FINE] ${proof.openGoals().size()} remains open")
+        when (closed) {
+            ProofState.Success -> printm("[OK  ] ✔ Proof closed.", fg = GREEN)
+            ProofState.Skipped -> printm("[WARN] ! Proof skipped.", fg = YELLOW)
+            ProofState.Failed -> {
+                errors++
+                printm("[ERR ] ✘ Proof open.", fg = RED)
+                if (verbose)
+                    printm("[FINE] ${proof.openGoals().size()} remains open")
+            }
         }
         proof.dispose()
         return closed
     }
 
-    private fun runAutoMode(proofControl: AbstractProofControl, proof: Proof): Boolean {
+    private fun runAutoMode(proofControl: AbstractProofControl, proof: Proof): ProofState {
         val time = measureTimeMillis {
             if (enableMeasuring) {
                 val mm = MeasuringMacro()
@@ -298,10 +313,10 @@ class Checker : CliktCommand() {
             printm("[FINE] Auto-mode took ${time / 1000.0} seconds.")
         }
         printStatistics(proof)
-        return proof.closed()
+        return if (proof.closed()) ProofState.Success else ProofState.Failed
     }
 
-    private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: File): Boolean {
+    private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: File): ProofState {
         val script = scriptFile.readText()
         val engine = ProofScriptEngine(script, Location(scriptFile.toURL(), 1, 1))
         val time = measureTimeMillis {
@@ -309,20 +324,20 @@ class Checker : CliktCommand() {
         }
         print("Script execution took ${time / 1000.0} seconds.")
         printStatistics(proof)
-        return proof.closed()
+        return if (proof.closed()) ProofState.Success else ProofState.Failed
     }
 
-    private fun loadProof(keyFile: File): Boolean {
+    private fun loadProof(keyFile: File): ProofState {
         val env = KeYEnvironment.load(keyFile)
         try {
             val proof = env?.loadedProof
             try {
                 if (proof == null) {
                     printm("[ERR] No proof found in given KeY-file.", fg = 38)
-                    return false
+                    return ProofState.Failed
                 }
                 printStatistics(proof)
-                return proof.closed()
+                return if (proof.closed()) ProofState.Success else ProofState.Failed
             } finally {
                 proof?.dispose()
             }
@@ -371,7 +386,8 @@ class Checker : CliktCommand() {
     private fun findScriptFile(filename: String): File? =
         proofFileCandidates.find {
             val name = it.name
-            name.startsWith(filename) && (name.endsWith(".txt") || name.endsWith(".pscript")) }
+            name.startsWith(filename) && (name.endsWith(".txt") || name.endsWith(".pscript"))
+        }
 }
 
 fun main(args: Array<String>) = Checker().main(args)
@@ -421,6 +437,10 @@ private fun generateSummary(proof: Proof): HashMap<String, Any> {
     result["Total rule apps"] = stat.totalRuleApps
     result["Interactive Rule Apps"] = stat.interactiveAppsDetails
     return result
+}
+
+enum class ProofState {
+    Success, Failed, Skipped
 }
 
 internal fun obj2json(any: Any?): String =
