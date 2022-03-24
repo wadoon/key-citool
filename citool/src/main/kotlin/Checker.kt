@@ -31,7 +31,7 @@ import de.uka.ilkd.key.util.KeYConstants
 import de.uka.ilkd.key.util.MiscTools
 import org.key_project.util.collection.ImmutableList
 import java.io.File
-import java.util.TreeMap
+import java.util.*
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
@@ -68,10 +68,19 @@ class Checker : CliktCommand() {
         help = "maximal amount of steps in auto-mode [default:10000]"
     )
         .int().default(10000)
-    val verbose by option("-v", "--verbose", help = "verbose output, currently unused")
+
+    val verbose by option("-v", "--verbose", help = "verbose output")
         .flag("--no-verbose")
 
-    val statisticsFile: File? by option("-s", "--statistics", help = "if set, JSON files with proof statistics are written")
+    val debug by option("-d", "--debug", help = "more verbose output")
+        .flag("--no-debug")
+
+
+    val statisticsFile: File? by option(
+        "-s",
+        "--statistics",
+        help = "if set, JSON files with proof statistics are written"
+    )
         .file()
 
     val dryRun by option(
@@ -133,6 +142,13 @@ class Checker : CliktCommand() {
         printm("KeY internal: ${KeYConstants.INTERNAL_VERSION}")
         printm("Copyright: ${KeYConstants.COPYRIGHT}")
         printm("More information at: https://formal.iti.kit.edu/weigl/ci-tool/")
+
+        if (debug) {
+            printm("Proof files and Sripts found: ")
+            proofFileCandidates.forEach {
+                printm(it.absolutePath)
+            }
+        }
 
         testSuites.name = inputFile.joinToString(" ")
 
@@ -202,6 +218,7 @@ class Checker : CliktCommand() {
                             ignored++
                         }
                         else -> {
+                            if(debug) printm("Search for ${filename} in proof path")
                             val b = runContract(pm, c, filename)
                             if (b) {
                                 //testCase.result = TestCaseKind.Skipped("Contract excluded by `--forbid-contract`.")
@@ -284,9 +301,9 @@ class Checker : CliktCommand() {
         return proof.closed()
     }
 
-    private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: String): Boolean {
-        val script = File(scriptFile).readText()
-        val engine = ProofScriptEngine(script, Location(scriptFile, 1, 1))
+    private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: File): Boolean {
+        val script = scriptFile.readText()
+        val engine = ProofScriptEngine(script, Location(scriptFile.toURL(), 1, 1))
         val time = measureTimeMillis {
             engine.execute(ui, proof)
         }
@@ -295,8 +312,8 @@ class Checker : CliktCommand() {
         return proof.closed()
     }
 
-    private fun loadProof(keyFile: String): Boolean {
-        val env = KeYEnvironment.load(File(keyFile))
+    private fun loadProof(keyFile: File): Boolean {
+        val env = KeYEnvironment.load(keyFile)
         try {
             val proof = env?.loadedProof
             try {
@@ -337,17 +354,24 @@ class Checker : CliktCommand() {
         }
     }
 
-    val proofFileCandidates by lazy {
-        val candidates = ArrayList<String>()
-        proofPath.forEach { candidates.addAll(File(it).list()) }
-        candidates
+    val proofFileCandidates: List<File> by lazy {
+        proofPath.asSequence()
+            .flatMap { File(it).walkTopDown().asSequence() }
+            .filter { it.isFile }
+            .toList()
+            .sorted()
     }
 
-    private fun findProofFile(filename: String): String? =
-        proofFileCandidates.find { it.startsWith(filename) && (it.endsWith(".proof") || it.endsWith(".proof.gz")) }
+    private fun findProofFile(filename: String): File? =
+        proofFileCandidates.find {
+            val name = it.name
+            name.startsWith(filename) && (name.endsWith(".proof") || name.endsWith(".proof.gz"))
+        }
 
-    private fun findScriptFile(filename: String): String? =
-        proofFileCandidates.find { it.startsWith(filename) && (it.endsWith(".txt") || it.endsWith(".pscript")) }
+    private fun findScriptFile(filename: String): File? =
+        proofFileCandidates.find {
+            val name = it.name
+            name.startsWith(filename) && (name.endsWith(".txt") || name.endsWith(".pscript")) }
 }
 
 fun main(args: Array<String>) = Checker().main(args)

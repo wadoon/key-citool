@@ -60,6 +60,7 @@ script:
   - [Minimized Version for the use non-master branch of KeY](https://formal.iti.kit.edu/ci-tool/ci-tool-1.3.0-mini.jar)
   - Added support for writing out proof statistic file into a JSON file, see option `-s`.  
   - Bundled with KeY-2.10.0 from KeY's maven repository.
+  - Bug-fix: Proof-path are now treated correctly and recursively.
 
 * [1.3.0 (2021-03-03)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.3.0-all.jar): 
   - Added supporting for writing Junit xml files  (still beta)
