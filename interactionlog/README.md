@@ -48,9 +48,17 @@ dependencies {
 }
 
 repositories {
-    maven { url = uri("https://maven.pkg.github.com/wadoon/key-tools") }
+   maven { 
+      url = uri("https://maven.pkg.github.com/wadoon/key-tools") 
+      credentials {
+         username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+         password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+      }
+   }
 }
 ```
+
+Set the property or environment variable accordingly to your Github username and personal access token.
 
 [The packages are hosted at Github](https://github.com/wadoon/key-tools/packages/1213432).
 
