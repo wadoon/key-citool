@@ -1,4 +1,4 @@
-# KeY: ci-tool 1.3.0
+# KeY: ci-tool 1.4.0
 
 ci-tool is a utility for supporting Java and JML contracts in Continuous Integration pipelines 
 by providing support for checking the proofability of JML with [KeY](https://key-project.org).
@@ -23,17 +23,19 @@ To use the ci-tool add the following lines to the ci config.
   $ wget -O ci-tool.jar  https://formal.iti.kit.edu/weigl/ci-tool/latest.php?type=mini
   ```
 
-  Remember, that you need to add `KeY-2.X.Y-exe.jar` to your classpath. 
+  If you are using the `mini` version, you also need to add `KeY-2.X.Y-exe.jar` 
+  to your classpath. 
   
 2. Call ci-tool with your key-files or java file (or folder).
    ci-tool tries to verify all proofs automatically and uses found proofs or script files.
-   ``` 
+
+   ```bash 
    $ java -jar <jarfile> [files]
    ```
 
-3. Find more parameters with `-h`
+4. Find more parameters with `-h`
   
-   ``` 
+   ```bash
    $ java -jar <jarfile> -h 
    ```
 
@@ -42,7 +44,7 @@ To use the ci-tool add the following lines to the ci config.
 
 For travis-ci:
 
-```
+```yaml
 jdk:
   - openjdk11
 
@@ -54,13 +56,17 @@ script:
   - java -jar ci-tool.jar simplified/Keyserver.java
 ```
 
+[Check out this file for Github workflows.](https://github.com/KeYProject/verification-project-template/blob/main/.github/workflows/KeY-check.yml)
+
+
 ## Changelog
 
 * [1.4.0 (2022-03-23)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.4.0-all.jar):
-  - [Minimized Version for the use non-master branch of KeY](https://formal.iti.kit.edu/ci-tool/ci-tool-1.3.0-mini.jar)
+  - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-1.4.0-mini.jar)
   - Added support for writing out proof statistic file into a JSON file, see option `-s`.  
-  - Bundled with KeY-2.10.0 from KeY's maven repository.
+    If you want to gather statistics you can use [script like this.](https://github.com/KeYProject/verification-project-template/blob/main/tools/statistics.py)
   - Bug-fix: Proof-path are now treated correctly and recursively.
+  - Bundled with KeY-2.10.0 from KeY's maven repository.
 
 * [1.3.0 (2021-03-03)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.3.0-all.jar): 
   - Added supporting for writing Junit xml files  (still beta)
