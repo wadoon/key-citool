@@ -31,18 +31,20 @@ import de.uka.ilkd.key.util.KeYConstants
 import de.uka.ilkd.key.util.MiscTools
 import org.key_project.util.collection.ImmutableList
 import java.io.File
+import java.io.FileInputStream
 import java.util.*
+import java.util.zip.GZIPInputStream
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
 
 const val ESC = 27.toChar()
-const val RED = 31;
-const val GREEN = 32;
-const val YELLOW = 33;
-const val BLUE = 34;
-const val MAGENTA = 35;
-const val CYAN = 36;
+const val RED = 31
+const val GREEN = 32
+const val YELLOW = 33
+const val BLUE = 34
+const val MAGENTA = 35
+const val CYAN = 36
 fun color(s: Any, c: Int) = "${ESC}[${c}m$s${ESC}[0m"
 
 /**
@@ -76,6 +78,12 @@ class Checker : CliktCommand() {
     val debug by option("-d", "--debug", help = "more verbose output")
         .flag("--no-debug")
 
+
+    val readContractNames by option(
+        "--read-contract-names-from-file",
+        help = "if set, the contract names are read from the proof file contents"
+    )
+        .flag()
 
     val disableAutoMode by option(
         "--no-auto-mode",
@@ -172,7 +180,7 @@ class Checker : CliktCommand() {
         exitProcess(errors)
     }
 
-    var currentPrintLevel = 0;
+    var currentPrintLevel = 0
     fun printBlock(message: String, f: () -> Unit) {
         printm(message)
         currentPrintLevel++
@@ -212,7 +220,6 @@ class Checker : CliktCommand() {
             for (c in contracts) {
                 val testCase = testSuite.newTestCase(c.name)
                 printBlock("[INFO] Contract: `${c.name}`") {
-                    val filename = MiscTools.toValidFileName(c.name)
                     when {
                         c.name in forbidContracts -> {
                             printm(" [INFO] Contract excluded by `--forbid-contract`")
@@ -225,8 +232,7 @@ class Checker : CliktCommand() {
                             ignored++
                         }
                         else -> {
-                            if (debug) printm("Search for ${filename} in proof path")
-                            val b = runContract(pm, c, filename)
+                            val b = runContract(pm, c)
                             when (b) {
                                 ProofState.Success -> successful++
                                 ProofState.Failed -> {
@@ -249,15 +255,15 @@ class Checker : CliktCommand() {
         }
     }
 
-    private fun runContract(pm: ProofManagementApi, contract: Contract, filename: String): ProofState {
+    private fun runContract(pm: ProofManagementApi, contract: Contract): ProofState {
         val proofApi = pm.startProof(contract)
         val proof = proofApi.proof
         require(proof != null)
         proof.settings?.strategySettings?.maxSteps = autoModeStep
         ProofSettings.DEFAULT_SETTINGS.strategySettings.maxSteps = autoModeStep
 
-        val proofFile = findProofFile(filename)
-        val scriptFile = findScriptFile(filename)
+        val proofFile = findProofFile(contract.name)
+        val scriptFile = findScriptFile(contract.name)
         val ui = proofApi.env.ui as AbstractUserInterfaceControl
         val pc = proofApi.env.proofControl as AbstractProofControl
 
@@ -373,15 +379,31 @@ class Checker : CliktCommand() {
         proofPath.asSequence()
             .flatMap { File(it).walkTopDown().asSequence() }
             .filter { it.isFile }
+            .filter { it.name.endsWith(".proof") || it.name.endsWith(".proof.gz") }
             .toList()
             .sorted()
     }
 
-    private fun findProofFile(filename: String): File? =
-        proofFileCandidates.find {
-            val name = it.name
-            name.startsWith(filename) && (name.endsWith(".proof") || name.endsWith(".proof.gz"))
+    val contractNameToProofFile by lazy {
+        if (readContractNames) {
+            proofFileCandidates.associateBy { extractContractName(it) }
+        } else {
+            hashMapOf()
         }
+    }
+
+
+    private fun findProofFile(contractName: String): File? =
+        if (contractName in contractNameToProofFile) {
+            contractNameToProofFile[contractName]
+        } else {
+            val filename = MiscTools.toValidFileName(contractName)
+            proofFileCandidates.find {
+                val name = it.name
+                name.startsWith(filename) && (name.endsWith(".proof") || name.endsWith(".proof.gz"))
+            }
+        }
+
 
     private fun findScriptFile(filename: String): File? =
         proofFileCandidates.find {
@@ -421,7 +443,7 @@ private fun generateSummary(proof: Proof): HashMap<String, Any> {
     val result = HashMap<String, Any>()
     val stat: Statistics = proof.statistics
     result["Nodes"] = stat.nodes
-    result["Branches"] = stat.branches;
+    result["Branches"] = stat.branches
     result["Interactive steps"] = stat.interactiveSteps
     result["Symbolic execution steps"] = stat.symbExApps
     result["Automode time"] = proof.autoModeTime
@@ -438,6 +460,19 @@ private fun generateSummary(proof: Proof): HashMap<String, Any> {
     result["Interactive Rule Apps"] = stat.interactiveAppsDetails
     return result
 }
+
+private fun extractContractName(it: File): String? {
+    val input = if (it.name.endsWith(".gz")) {
+        GZIPInputStream(FileInputStream(it))
+    } else {
+        FileInputStream(it)
+    }
+    input.bufferedReader().use { incoming ->
+        val contractLine = incoming.lineSequence().find { it.startsWith("name=") }
+        return contractLine?.trim()?.substring("name=".length)
+    }
+}
+
 
 enum class ProofState {
     Success, Failed, Skipped

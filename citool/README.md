@@ -61,6 +61,12 @@ script:
 
 ## Changelog
 
+* [1.5.0-pre (2022-XX-XX)](https://formal.iti.kit.edu/ci-tool/ci-tool-XXX.jar):
+  - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-XXX-mini.jar)
+  - [ADD] If you store your proof files under the non-default filename, you can enable 
+    `--read-contract-names-from-file` in ci-tool, for detection based on content. 
+
+
 * [1.4.0 (2022-03-23)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.4.0-all.jar):
   - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-1.4.0-mini.jar)
   - Added support for writing out proof statistic file into a JSON file, see option `-s`.  
@@ -95,10 +101,24 @@ script:
 * [1.0.0](https://formal.iti.kit.edu/ci-tool/keyext.citool-1.0.0-all.jar) initial working version (*24.01.2020*)
   - first release of this project after positive of the a small `jshell` utility.
   - deploy on VerifyThis LTC 2020 repository  
+
+## Usage hints
+
+ci-tool uses the KeY's default contract names and filenames to find proof files. 
+With the following script, you can restore the filenames based on the stored contract names inside the file. 
+
+```bash
+#!/bin/bash -x
+
+line=$(zcat "$1" | grep 'name=' | head -n 1 | tr -d '\r\n')
+name=${line:5}
+name=$(echo $name | tr '\\$?|<>:*"/[]' "_______+'-()")
+mv "$1" "${name}.proof.gz"
+```
   
   
 ## Future features
 
 * Accumulate statistics
 * If proof remains open, 
-* Calculate a coverage based on statements in the 
+* Calculate a coverage based on statements 
