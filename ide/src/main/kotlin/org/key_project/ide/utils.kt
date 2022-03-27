@@ -1,15 +1,15 @@
 package org.key_project.ide
 
-import mu.KotlinLogging
+import org.slf4j.LoggerFactory
 import kotlin.reflect.KProperty
 
 /**
  *
  */
-internal val logger = KotlinLogging.logger("key-ide")
+internal val logger = LoggerFactory.getLogger("key-ide")
 
 /**
- * A little bit of dependency injection.
+ * A little of dependency injection.
  */
 class Context {
     private val map = HashMap<Class<*>, Any>()

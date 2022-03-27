@@ -16,7 +16,6 @@ import java.net.URL
 import java.nio.file.*
 import java.nio.file.StandardWatchEventKinds.*
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.io.path.*
 import kotlin.reflect.KProperty
 
@@ -44,8 +43,8 @@ object ConfigurationPaths {
     val recentFiles = configFolder.resolve("key-ide-recentfiles")
 
     init {
-        logger.info { "Linked against: ${KeYConstants.VERSION}" }
-        logger.info { "Linked against: ${KeYConstants.COPYRIGHT}" }
+        logger.info("Linked against: ${KeYConstants.VERSION}")
+        logger.info("Linked against: ${KeYConstants.COPYRIGHT}")
     }
 }
 
@@ -63,7 +62,6 @@ class PropertiesProperty<T>(
     }
 }
 
-@OptIn(ExperimentalPathApi::class)
 abstract class Configuration(
     val properties: Properties = Properties(),
     val prefix: String = ""
@@ -104,7 +102,6 @@ class ApplicationData : Configuration() {
 }
 
 
-@OptIn(ExperimentalPathApi::class)
 class RecentFiles {
     val files = FXCollections.observableArrayList<Path>()
     fun load() = load(ConfigurationPaths.recentFiles)
@@ -116,7 +113,7 @@ class RecentFiles {
     }
 
     fun save() {
-        logger.info { "Store recent-files to ${ConfigurationPaths.recentFiles}" }
+        logger.info("Store recent-files to ${ConfigurationPaths.recentFiles}")
         val lines = files.map { it.toAbsolutePath().toString() }
         ConfigurationPaths.recentFiles.writeLines(lines)
     }
@@ -128,7 +125,7 @@ class UserConfig() : Configuration() {
 
     internal fun createItem(id: String, function: (ActionEvent) -> Unit): MenuItem {
         fun getActionValue(key: String): String? = properties["actions.$key"]?.toString() ?: null.also {
-            logger.warn { "actions.$key is not defined in config" }
+            logger.warn("actions.$key is not defined in config")
         }
 
         val resolver = IkonResolver.getInstance()
@@ -149,7 +146,7 @@ class UserConfig() : Configuration() {
     }
 
     fun save() {
-        logger.info { "Store user config to ${ConfigurationPaths.userConfig}" }
+        logger.info("Store user config to ${ConfigurationPaths.userConfig}")
         save(ConfigurationPaths.userConfig)
     }
 }
@@ -242,7 +239,7 @@ class ThemeManager(
         scene.stylesheets.add(index, cssFile.toExternalForm())
         installWatcher(cssFile, fileUpdateMonitor) {
             Platform.runLater {
-                logger.info { "Reload css file $cssFile" }
+                logger.info("Reload css file $cssFile")
                 scene.stylesheets.remove(cssFile.toExternalForm())
                 scene.stylesheets.add(index, cssFile.toExternalForm())
             }
@@ -257,12 +254,12 @@ class ThemeManager(
         if (cssUri.toString().contains("jrt")) return;
         try {
             val cssPath: Path = Path.of(cssUri).toAbsolutePath()
-            logger.info { "Enabling live reloading of $cssPath" }
+            logger.info("Enabling live reloading of $cssPath")
             fileUpdateMonitor.addListener(cssPath) { _ ->
                 block()
             }
         } catch (e: Exception) {
-            logger.error(e){}
+            logger.error("", e)
         }
     }
 }

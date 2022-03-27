@@ -121,7 +121,7 @@ class MainView() : View() {
         tabPanel.tabs.add(tab)
         editor.title.addListener { _, _, new -> tab.text = new }
         openEditors.add(editor)
-        editor.ui.focusedProperty().addListener { obs, _, new -> if (new) currentEditor = editor }
+        editor.ui.focusedProperty().addListener { _, _, new -> if (new) currentEditor = editor }
         currentEditor = editor
         editor.ui.requestFocus()
     }
