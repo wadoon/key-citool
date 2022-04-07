@@ -7,8 +7,10 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import com.google.gson.GsonBuilder
 import de.uka.ilkd.key.api.KeYApi
 import de.uka.ilkd.key.api.ProofManagementApi
 import de.uka.ilkd.key.control.AbstractProofControl
@@ -45,7 +47,10 @@ const val YELLOW = 33
 const val BLUE = 34
 const val MAGENTA = 35
 const val CYAN = 36
-fun color(s: Any, c: Int) = "${ESC}[${c}m$s${ESC}[0m"
+const val WHITE = 37
+
+fun colorfg(s: Any, c: Int) = "${ESC}[${c}m$s${ESC}[0m"
+fun colorbg(s: Any, c: Int) = "${ESC}[${c + 10}m$s${ESC}[0m"
 
 /**
  * A small interface for a checker scripts
@@ -54,6 +59,11 @@ fun color(s: Any, c: Int) = "${ESC}[${c}m$s${ESC}[0m"
  */
 class Checker : CliktCommand() {
     private val statistics = TreeMap<String, Any>()
+
+    enum class ColorMode { YES, NO, AUTO }
+
+    var useColor: Boolean = false
+    val color by option("--color").enum<ColorMode>().default(ColorMode.AUTO)
 
     val junitXmlOutput by option("--xml-output").file()
 
@@ -95,8 +105,13 @@ class Checker : CliktCommand() {
         "-s",
         "--statistics",
         help = "if set, JSON files with proof statistics are written"
-    )
-        .file()
+    ).file()
+
+    val appendStatistics by option(
+        "--append-stat",
+        help = "Normally, the `statisticsFile' is overriden by the ci-too. " +
+                "If set the statistics are appended to the JSON data structure."
+    ).flag()
 
     val dryRun by option(
         "--dry-run",
@@ -153,6 +168,12 @@ class Checker : CliktCommand() {
     var testSuites = TestSuites()
 
     override fun run() {
+        useColor = when (color) {
+            ColorMode.YES -> true
+            ColorMode.AUTO -> System.console() != null || System.getenv("GIT_PAGER_IN_USE") != null
+            ColorMode.NO -> false
+        }
+
         printm("KeY version: ${KeYConstants.VERSION}")
         printm("KeY internal: ${KeYConstants.INTERNAL_VERSION}")
         printm("Copyright: ${KeYConstants.COPYRIGHT}")
@@ -169,7 +190,21 @@ class Checker : CliktCommand() {
 
         inputFile.forEach { run(it) }
 
-        statisticsFile?.writeText(obj2json(statistics))
+        statisticsFile?.let { statisticsFile ->
+            val gson = GsonBuilder().disableJdkUnsafe().serializeNulls().setPrettyPrinting().create()
+            if (appendStatistics) {
+                val stat = gson.fromJson(statisticsFile.readText(), TreeMap::class.java) as TreeMap<String, Any>
+                stat.putAll(statistics)
+                statisticsFile.bufferedWriter().use {
+                    gson.toJson(stat, it)
+                }
+            } else {
+                // statisticsFile.writeText(obj2json(statistics))
+                statisticsFile.bufferedWriter().use {
+                    gson.toJson(statistics, it)
+                }
+            }
+        }
 
         junitXmlOutput?.let { file ->
             file.bufferedWriter().use {
@@ -182,23 +217,36 @@ class Checker : CliktCommand() {
 
     var currentPrintLevel = 0
     fun printBlock(message: String, f: () -> Unit) {
-        printm(message)
+        info(message)
         currentPrintLevel++
         f()
         currentPrintLevel--
     }
 
 
-    fun printm(message: String, fg: Int? = null) {
+    fun printm(message: String, fg: Int? = null, bg: Int? = null) {
         print("  ".repeat(currentPrintLevel))
-        if (fg != null)
-            println(color(message, fg))
-        else
-            println(message)
+        val m =
+            when {
+                useColor -> message
+                fg != null && bg != null -> colorbg(colorfg(message, fg), bg)
+                fg != null -> colorfg(message, fg)
+                bg != null -> colorbg(message, bg)
+                else -> message
+            }
+        println(m)
     }
 
+    fun error(message: String) = printm("[ERR ] $message", fg = RED)
+    fun fail(message: String) = printm("[FAIL] $message", fg = WHITE, bg = RED)
+    fun warn(message: String) = printm("[WARN] $message", fg = YELLOW)
+    fun info(message: String) = printm("[FINE] $message", fg = BLUE)
+    fun fine(message: String) = printm("[OK  ] $message", fg = GREEN)
+    fun debug(message: String) =
+        if (verbose) printm("[    ] $message", fg = GREEN) else Unit
+
     fun run(inputFile: String) {
-        printBlock("[INFO] Start with `$inputFile`") {
+        printBlock("Start with `$inputFile`") {
             val pm = KeYApi.loadProof(File(inputFile),
                 classpath.map { File(it) },
                 bootClassPath?.let { File(it) },
@@ -207,10 +255,11 @@ class Checker : CliktCommand() {
             val contracts = pm.proofContracts
                 .filter { it.name in onlyContracts || onlyContracts.isEmpty() }
 
-            printm("[INFO] Found: ${contracts.size}")
+            info("Found: ${contracts.size}")
             var successful = 0
             var ignored = 0
             var failure = 0
+            var error = 0
 
             val testSuite = testSuites.newTestSuite(inputFile)
             ProofSettings.DEFAULT_SETTINGS.properties.forEach { t, u ->
@@ -232,14 +281,14 @@ class Checker : CliktCommand() {
                             ignored++
                         }
                         else -> {
-                            val b = runContract(pm, c)
-                            when (b) {
+                            when (runContract(pm, c)) {
                                 ProofState.Success -> successful++
                                 ProofState.Failed -> {
                                     testCase.result = TestCaseKind.Failure("Proof not closeable.")
                                     failure++
                                 }
                                 ProofState.Skipped -> ignored++
+                                ProofState.Error -> error++
                             }
                         }
                     }
@@ -248,10 +297,10 @@ class Checker : CliktCommand() {
             printm(
                 "[INFO] Summary for $inputFile: " +
                         "(successful/ignored/failure) " +
-                        "(${color(successful, GREEN)}/${color(ignored, BLUE)}/${color(failure, RED)})"
+                        "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
             )
             if (failure != 0)
-                printm("[ERR ] $inputFile failed!", fg = RED)
+                error("$inputFile failed!")
         }
     }
 
@@ -270,18 +319,18 @@ class Checker : CliktCommand() {
 
         val closed = when {
             proofFile != null -> {
-                printm("[INFO] Proof found: $proofFile. Try loading.")
+                info("Proof found: $proofFile. Try loading.")
                 loadProof(proofFile)
             }
             scriptFile != null -> {
-                printm("[INFO] Script found: $scriptFile. Try proving.")
+                info("Script found: $scriptFile. Try proving.")
                 loadScript(ui, proof, scriptFile)
             }
             else -> {
                 if (verbose)
-                    printm("[INFO] No proof or script found. Fallback to auto-mode.")
+                    info("No proof or script found. Fallback to auto-mode.")
                 if (disableAutoMode) {
-                    printm("[WARN] Proof skipped because to `--no-auto-mode' switch is set.")
+                    warn("Proof skipped because to `--no-auto-mode' switch is set.")
                     ProofState.Skipped
                 } else {
                     runAutoMode(pc, proof)
@@ -290,14 +339,14 @@ class Checker : CliktCommand() {
         }
 
         when (closed) {
-            ProofState.Success -> printm("[OK  ] ✔ Proof closed.", fg = GREEN)
-            ProofState.Skipped -> printm("[WARN] ! Proof skipped.", fg = YELLOW)
+            ProofState.Success -> fine("✔ Proof closed.")
+            ProofState.Skipped -> warn("! Proof skipped.")
             ProofState.Failed -> {
                 errors++
-                printm("[ERR ] ✘ Proof open.", fg = RED)
-                if (verbose)
-                    printm("[FINE] ${proof.openGoals().size()} remains open")
+                error("✘ Proof open.")
+                debug("${proof.openGoals().size()} remains open")
             }
+            ProofState.Error -> fail("Could not load proof due to exception in KeY.")
         }
         proof.dispose()
         return closed
@@ -309,14 +358,19 @@ class Checker : CliktCommand() {
                 val mm = MeasuringMacro()
                 proofControl.runMacro(proof.root(), mm, null)
                 proofControl.waitWhileAutoMode()
-                printm("[INFO] Proof has open/closed before: ${mm.before}")
-                printm("[INFO] Proof has open/closed after: ${mm.after}")
+                info("Proof has open/closed before: ${mm.before}")
+                info("Proof has open/closed after: ${mm.after}")
             } else {
-                proofControl.startAndWaitForAutoMode(proof)
+                try {
+                    proofControl.startAndWaitForAutoMode(proof)
+                } catch (e: Exception) {
+                    fail("Error in KeY during auto mode. ${e.javaClass} : ${e.message}")
+                    return ProofState.Error
+                }
             }
         }
         if (verbose) {
-            printm("[FINE] Auto-mode took ${time / 1000.0} seconds.")
+            fine("Auto-mode took ${time / 1000.0} seconds.")
         }
         printStatistics(proof)
         return if (proof.closed()) ProofState.Success else ProofState.Failed
@@ -325,21 +379,32 @@ class Checker : CliktCommand() {
     private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: File): ProofState {
         val script = scriptFile.readText()
         val engine = ProofScriptEngine(script, Location(scriptFile.toURL(), 1, 1))
-        val time = measureTimeMillis {
-            engine.execute(ui, proof)
+        return try {
+            val time = measureTimeMillis {
+                engine.execute(ui, proof)
+            }
+            info("Script execution took ${time / 1000.0} seconds.")
+            printStatistics(proof)
+            if (proof.closed()) ProofState.Success else ProofState.Failed
+        } catch (e: Exception) {
+            fail("Error in KeY during auto mode. ${e.javaClass} : ${e.message}")
+            ProofState.Error
         }
-        print("Script execution took ${time / 1000.0} seconds.")
-        printStatistics(proof)
-        return if (proof.closed()) ProofState.Success else ProofState.Failed
     }
 
     private fun loadProof(keyFile: File): ProofState {
-        val env = KeYEnvironment.load(keyFile)
+        val env = try {
+            KeYEnvironment.load(keyFile)
+        } catch (e: Exception) {
+            error("Error during loading the KeY file. Exception: ${e.javaClass} ${e.message}")
+            return ProofState.Error
+        }
+
         try {
             val proof = env?.loadedProof
             try {
                 if (proof == null) {
-                    printm("[ERR] No proof found in given KeY-file.", fg = 38)
+                    fail("No proof found in given KeY-file.")
                     return ProofState.Failed
                 }
                 printStatistics(proof)
@@ -350,6 +415,7 @@ class Checker : CliktCommand() {
         } finally {
             env.dispose()
         }
+
     }
 
 
@@ -358,7 +424,7 @@ class Checker : CliktCommand() {
             statistics[proof.name().toString()] = generateSummary(proof)
         }
         if (verbose) {
-            proof.statistics.summary.forEach { p -> printm("[FINE] ${p.first} = ${p.second}") }
+            proof.statistics.summary.forEach { p -> debug("${p.first} = ${p.second}") }
         }
         if (enableMeasuring) {
             val closedGoals = proof.getClosedSubtreeGoals(proof.root())
@@ -371,7 +437,7 @@ class Checker : CliktCommand() {
                     }
                 }
             }
-            printm("Visited lines:\n${visitLineOnClosedGoals.joinToString("\n")}")
+            info("Visited lines:\n${visitLineOnClosedGoals.joinToString("\n")}")
         }
     }
 
@@ -475,7 +541,7 @@ private fun extractContractName(it: File): String? {
 
 
 enum class ProofState {
-    Success, Failed, Skipped
+    Success, Failed, Skipped, Error
 }
 
 internal fun obj2json(any: Any?): String =

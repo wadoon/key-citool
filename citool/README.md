@@ -3,7 +3,7 @@
 ci-tool is a utility for supporting Java and JML contracts in Continuous Integration pipelines 
 by providing support for checking the proofability of JML with [KeY](https://key-project.org).
 
-ci-tool is licensed under GPLv2+.
+ci-tool is licensed under GPLv3.
 
 If you any suggestion feel to contact: [Alexander Weigl](https://formal.iti.kit.edu/weigl).
 
@@ -65,6 +65,9 @@ script:
   - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-XXX-mini.jar)
   - [ADD] If you store your proof files under the non-default filename, you can enable 
     `--read-contract-names-from-file` in ci-tool, for detection based on content. 
+  - [ADD] `--append-statistics` gives you the opportunity to accumulate the statistics of different runs into one file.
+  - [ADD] `--color={auto,yes,no}` allows you to configure the use of colors
+  - [ENH] more robustness on loading KeY proofs
 
 
 * [1.4.0 (2022-03-23)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.4.0-all.jar):
