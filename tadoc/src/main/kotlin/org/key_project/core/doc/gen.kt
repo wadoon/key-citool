@@ -1,15 +1,32 @@
+/* key-tools are extension for the KeY theorem prover.
+ * Copyright (C) 2021  Alexander Weigl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * For the complete terms of the GNU General Public License, please see this URL:
+ * http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 package org.key_project.core.doc
 
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
 import java.util.concurrent.TimeUnit
 
-
 fun execute(vararg args: String): String {
-    //App.putln(args.joinToString(" "))
+    // App.putln(args.joinToString(" "))
     val pb = ProcessBuilder(args.toList())
-            .redirectErrorStream(true)
-            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+        .redirectErrorStream(true)
+        .redirectOutput(ProcessBuilder.Redirect.PIPE)
     val p = pb.start()
     p.waitFor(1, TimeUnit.SECONDS)
     return p.inputStream.reader().readText()
@@ -73,11 +90,12 @@ class Indexer(val self: String, val index: Index) : KeYParserBaseVisitor<Unit>()
  * Represents a link to an entry.
  */
 open class Symbol(
-        val displayName: String,
-        val url: String,
-        val target: String = displayName,
-        val type: Type,
-        val ctx: Any? = null) {
+    val displayName: String,
+    val url: String,
+    val target: String = displayName,
+    val type: Type,
+    val ctx: Any? = null
+) {
     open val anchor = "$type-$target"
     open val href = "$url#$anchor"
 
@@ -95,7 +113,6 @@ open class Symbol(
         FILE("Files"),
         TOKEN("t"), EXTERNAL("ext");
     }
-
 
     companion object {
         fun choiceCategory(page: String, cat: String, ctx: Any? = null): Symbol = Symbol(cat, page, cat, Type.CATEGORY, ctx)
@@ -122,9 +139,8 @@ open class Symbol(
     }
 }
 
-data class TokenSymbol(val display: String, val tokenType: Int)
-    : Symbol(display, "https://key-project.org/docs/grammar/", display, Type.TOKEN)
-
+data class TokenSymbol(val display: String, val tokenType: Int) :
+    Symbol(display, "https://key-project.org/docs/grammar/", display, Type.TOKEN)
 
 typealias Index = ArrayList<Symbol>
 typealias Usages = MutableList<Symbol>

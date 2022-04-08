@@ -1,3 +1,21 @@
+/* key-tools are extension for the KeY theorem prover.
+ * Copyright (C) 2021  Alexander Weigl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * For the complete terms of the GNU General Public License, please see this URL:
+ * http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 package org.key_project.core.doc
 
 import de.uka.ilkd.key.nparser.KeYLexer
@@ -13,7 +31,6 @@ import org.key_project.core.doc.org.key_project.core.doc.App
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.*
-
 
 const val INDENT = 4
 
@@ -58,7 +75,7 @@ class PrettyPrinterDoc(
 
     private fun printSpan(text: String, classes: String) =
         if (printColor)
-            fancystring("<span class=\"token $classes\">${text}</span>", text.length)
+            fancystring("<span class=\"token $classes\">$text</span>", text.length)
         else
             string(text)
 
@@ -89,7 +106,7 @@ class PrettyPrinterDoc(
             parenthesisIds.push(p)
             val c = rainbowColors[p % rainbowColors.size]
             return fancystring(
-                "<span style=\"color:$c\" class=\"paired-element\" id=\"open-${p}\" mouseover=\"highlight(${p})\">${token.text}</span>",
+                "<span style=\"color:$c\" class=\"paired-element\" id=\"open-${p}\" mouseover=\"highlight($p)\">${token.text}</span>",
                 token.text.length
             )
         } else {
@@ -108,7 +125,6 @@ class PrettyPrinterDoc(
         } else {
             return string(token.text)
         }
-
     }
 
     override fun defaultResult() = empty
@@ -164,22 +180,21 @@ class PrettyPrinterDoc(
 
         if (null != ctx.ONEOF()) {
             doc = doc + space + ctx.ONEOF().text + space +
-                    surround_separate_map(
-                        INDENT, 1, empty,
-                        lbrace, comma + space, rbrace, ctx.oneof_sorts().sortId()
-                    ) {
-                        ref(it.text, SORT)
-                    }
+                surround_separate_map(
+                    INDENT, 1, empty,
+                    lbrace, comma + space, rbrace, ctx.oneof_sorts().sortId()
+                ) {
+                    ref(it.text, SORT)
+                }
         }
         if (null != ctx.EXTENDS()) {
             doc = doc + space + ctx.EXTENDS().text + space +
-                    separate_map(comma + space, ctx.sortExt.sortId()) {
-                        it.accept(this)
-                    }
+                separate_map(comma + space, ctx.sortExt.sortId()) {
+                    it.accept(this)
+                }
         }
         return doc + semi
     }
-
 
     private fun ref(text: String, vararg types: Symbol.Type): Document {
         if (!printReferences) return string(text) + space
@@ -371,29 +386,28 @@ class PrettyPrinterDoc(
         if (ctx == null) empty
         else leading + accept(ctx) + trailing
 
-
     override fun visitTaclet(ctx: KeYParser.TacletContext): Document {
         var d: Document = docOf(ctx.LEMMA(), trailing = space) +
-                accept(ctx.name) +
-                docOf(ctx.choices_) +
-                space + lbrace + hardline +
-                docOf(ctx.form)
+            accept(ctx.name) +
+            docOf(ctx.choices_) +
+            space + lbrace + hardline +
+            docOf(ctx.form)
 
         if (ctx.SCHEMAVAR().isNotEmpty()) {
             d = d + concat(
                 (0 until ctx.SCHEMAVAR().size).map { i ->
                     docOf(ctx.SCHEMAVAR(i)) + space + docOf(ctx.one_schema_var_decl(i)) + semi + hardline
-                })
+                }
+            )
         }
 
         ctx.ifSeq?.let {
             d = docOf(ctx.ASSUMES()) +
-                    lparen + accept(it) + rparen + hardline
+                lparen + accept(it) + rparen + hardline
         }
 
         ctx.find?.let {
             d = docOf(ctx.FIND()) + lparen + accept(ctx.find) + rparen + hardline
-
         }
 
         if (ctx.SAMEUPDATELEVEL().isNotEmpty())
@@ -406,15 +420,16 @@ class PrettyPrinterDoc(
             d = d + docOf(ctx.INSEQUENTSTATE().first(), trailing = hardline)
 
         if (ctx.VARCOND().isNotEmpty()) {
-            //( VARCOND LPAREN varexplist RPAREN )*
-            d = d + group(concat_map(ctx.varexplist()) {
-                docOf(ctx.VARCOND().first()) + lparen + docOf(it) + rparen + break1
-            })
+            // ( VARCOND LPAREN varexplist RPAREN )*
+            d = d + group(
+                concat_map(ctx.varexplist()) {
+                    docOf(ctx.VARCOND().first()) + lparen + docOf(it) + rparen + break1
+                }
+            )
         }
         d = d + docOf(ctx.goalspecs()) + docOf(ctx.modifiers()) + hardline + rbrace + semi
         return d
     }
-
 
     override fun visitModifiers(ctx: KeYParser.ModifiersContext): Document {
         var d: Document = empty
@@ -528,7 +543,6 @@ class PrettyPrinterDoc(
 private operator fun Document.plus(doc: Document) = cat(this, doc)
 private operator fun Document.plus(doc: String) = cat(this, string(doc))
 
-
 /**
  *
  * @author Alexander Weigl
@@ -566,7 +580,7 @@ class PrettyPrinterStr(
         return printSpan(text, vocabulary.getDisplayName(t.type))
     }
 
-    private fun printSpan(text: String, classes: String) = "<span class=\"token $classes\">${text}</span>"
+    private fun printSpan(text: String, classes: String) = "<span class=\"token $classes\">$text</span>"
 
     private val rainbowColors = arrayOf(
         "#458588",
@@ -594,14 +608,13 @@ class PrettyPrinterStr(
         parenthesisIds.push(p)
         val c = rainbowColors[p % rainbowColors.size]
         return "<span style=\"color:$c\" " +
-                "class=\"paired-element\" id=\"open-${p}\" mouseover=\"highlight(${p})\">${token.text}</span>"
+            "class=\"paired-element\" id=\"open-${p}\" mouseover=\"highlight($p)\">${token.text}</span>"
     }
 
     private fun closeParenthesis(token: Token): String {
         val pop = parenthesisIds.pop()
         val c = rainbowColors[pop % rainbowColors.size]
         return "<span style=\"color:$c\" class=\"paired-element\" id=\"close-$pop\" mouseover=\"highlight($pop)\">${token.text}</span>"
-
     }
 
     override fun defaultResult() = " "
@@ -673,7 +686,6 @@ class PrettyPrinterStr(
             }
             append(ctx.SEMI().text)
         }
-
 
     private fun ref(text: String, vararg types: Symbol.Type): String {
         if (!printReferences) return "$text "
@@ -874,9 +886,7 @@ class PrettyPrinterStr(
         }
         append(" {\n")
 
-
         appendn(ctx.form)
-
 
         if (ctx.SCHEMAVAR().isNotEmpty()) {
             for (i in 0 until ctx.SCHEMAVAR().size) {
@@ -914,14 +924,13 @@ class PrettyPrinterStr(
             ctx.VARCOND().forEach {
                 appendn(it)
             }
-            //appendn(ctx.VARCOND()).append("(")
-            //TODO weigl    .appendn(ctx.varexplist()).append(")\n")
+            // appendn(ctx.VARCOND()).append("(")
+            // TODO weigl    .appendn(ctx.varexplist()).append(")\n")
         }
         appendn(ctx.goalspecs())
         appendn(ctx.modifiers())
         append("\n};")
     }
-
 
     override fun visitModifiers(ctx: KeYParser.ModifiersContext) = buildString {
         for (i in 0 until ctx.rulesets().size) {
@@ -1030,6 +1039,4 @@ class PrettyPrinterStr(
     }
 
     override fun visitRuleset(ctx: KeYParser.RulesetContext) = ref(ctx.text, Symbol.Type.RULESET)
-
-
 }

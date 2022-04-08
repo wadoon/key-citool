@@ -1,3 +1,4 @@
+import com.diffplug.gradle.spotless.SpotlessExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -5,6 +6,7 @@ plugins {
     id("org.jetbrains.dokka") version "1.6.10" apply (false)
     `maven-publish`
     `java-library`
+    id("com.diffplug.spotless") version "6.4.2" apply false
 }
 
 repositories {
@@ -16,6 +18,7 @@ subprojects {
     apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "maven-publish")
     apply(plugin = "java-library")
+    apply(plugin = "com.diffplug.spotless")
 
     val plugin by configurations.creating
     configurations {
@@ -75,9 +78,32 @@ subprojects {
         withSourcesJar()
     }
 
-    tasks.withType<Javadoc>()  {
+    tasks.withType<Javadoc>() {
         isFailOnError = false
     }
+
+    configure<SpotlessExtension> { // if you are using build.gradle.kts, instead of 'spotless {' use:
+        // configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        kotlin {
+            // by default the target is every '.kt' and '.kts` file in the java sourcesets
+            //ktfmt()    // has its own section below
+            ktlint().userData(
+                mapOf(
+                    "disabled_rules" to "no-wildcard-imports",
+                    "insert_final_newline" to "true"
+                )
+            )
+            // has its own section below
+            //diktat()   // has its own section below
+            //prettier() // has its own section below
+            licenseHeaderFile("$rootDir/gradle/license_header")  // '/* (C)$YEAR */' // or licenseHeaderFile
+        }
+        kotlinGradle {
+            target("*.gradle.kts") // default target for kotlinGradle
+            ktlint() // or ktfmt() or prettier()
+        }
+    }
+
 
 
     publishing {

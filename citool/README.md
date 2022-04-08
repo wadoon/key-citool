@@ -3,7 +3,7 @@
 ci-tool is a utility for supporting Java and JML contracts in Continuous Integration pipelines 
 by providing support for checking the proofability of JML with [KeY](https://key-project.org).
 
-ci-tool is licensed under GPLv3.
+ci-tool is licensed under GPLv2+.
 
 If you any suggestion feel to contact: [Alexander Weigl](https://formal.iti.kit.edu/weigl).
 

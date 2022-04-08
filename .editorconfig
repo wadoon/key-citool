@@ -1,0 +1,3 @@
+[*.{kt,kts}]
+no-wildcard-imports = false
+no_wildcard_imports = false

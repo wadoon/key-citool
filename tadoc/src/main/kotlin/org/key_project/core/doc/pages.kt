@@ -1,3 +1,21 @@
+/* key-tools are extension for the KeY theorem prover.
+ * Copyright (C) 2021  Alexander Weigl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * For the complete terms of the GNU General Public License, please see this URL:
+ * http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 package org.key_project.core.doc
 
 import de.uka.ilkd.key.nparser.KeYParser
@@ -142,7 +160,6 @@ class IndexPage(target: File, index: Index) : DefaultPage(target, "Index Page", 
     }
 }
 
-
 class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : DefaultPage(target, "Usage", index) {
     val usedItems =
         usageIndex.entries.groupBy { (a, _) -> a.type }
@@ -202,10 +219,12 @@ class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : D
 }
 
 class DocumentationFile(
-    target: File, val keyFile: File, val ctx: KeYParser.FileContext, index: Index,
+    target: File,
+    val keyFile: File,
+    val ctx: KeYParser.FileContext,
+    index: Index,
     val usageIndex: UsageIndex
 ) : DefaultPage(target, "${keyFile.nameWithoutExtension} -- Documentation", index) {
-
 
     override fun content(div: DIV) {
         div.h1 { +keyFile.name }
@@ -214,11 +233,10 @@ class DocumentationFile(
             div.markdown(it.symbol)
         }
 
-        //small { +file.relativeTo(File(".").absoluteFile).toString() }
+        // small { +file.relativeTo(File(".").absoluteFile).toString() }
         ctx.accept(FileVisitor(self, div, index, usageIndex))
     }
 }
-
 
 class FileVisitor(
     val self: String,
@@ -326,7 +344,6 @@ class FileVisitor(
         super.visitPred_decls(ctx)
     }
 
-
     override fun visitPred_decl(ctx: KeYParser.Pred_declContext) {
         symbol = index.lookup(ctx)!!
         tagConsumer.div("doc predicate") {
@@ -430,7 +447,6 @@ private fun Index.findChoice(text: String?, text1: String?): Symbol? {
         it.type == Symbol.Type.OPTION && it.displayName == t
     }
 }
-
 
 object Markdown {
     private val extensions = arrayListOf(
