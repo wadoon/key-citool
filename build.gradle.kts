@@ -30,7 +30,7 @@ subprojects {
     apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "maven-publish")
     apply(plugin = "java-library")
-    apply(plugin = "com.diffplug.spotless")
+    //apply(plugin = "com.diffplug.spotless")
 
     val plugin by configurations.creating
     configurations {
@@ -94,17 +94,17 @@ subprojects {
         isFailOnError = false
     }
 
-    configure<SpotlessExtension> { // if you are using build.gradle.kts, instead of 'spotless {' use:
+    /*configure<SpotlessExtension> { // if you are using build.gradle.kts, instead of 'spotless {' use:
         // configure<com.diffplug.gradle.spotless.SpotlessExtension> {
         kotlin {
             // by default the target is every '.kt' and '.kts` file in the java sourcesets
             //ktfmt()    // has its own section below
-            /*ktlint().userData(
+            ktlint().userData(
                 mapOf(
                     "disabled_rules" to "no-wildcard-imports",
                     "insert_final_newline" to "true"
                 )
-            )*/
+            )
             // has its own section below
             //diktat()   // has its own section below
             //prettier() // has its own section below
@@ -114,7 +114,7 @@ subprojects {
             //target("*.gradle.kts") // default target for kotlinGradle
             //ktlint() // or ktfmt() or prettier()
         }
-    }
+    }*/
 
 
 
