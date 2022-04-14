@@ -36,7 +36,6 @@ import de.uka.ilkd.key.control.AbstractUserInterfaceControl
 import de.uka.ilkd.key.control.KeYEnvironment
 import de.uka.ilkd.key.control.UserInterfaceControl
 import de.uka.ilkd.key.logic.PosInOccurrence
-import de.uka.ilkd.key.macros.*
 import de.uka.ilkd.key.macros.scripts.ProofScriptEngine
 import de.uka.ilkd.key.parser.Location
 import de.uka.ilkd.key.proof.Goal
@@ -59,7 +58,6 @@ import kotlin.collections.HashSet
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
-
 const val ESC = 27.toChar()
 const val RED = 31
 const val GREEN = 32
@@ -69,8 +67,8 @@ const val MAGENTA = 35
 const val CYAN = 36
 const val WHITE = 37
 
-fun colorfg(s: Any, c: Int) = "${ESC}[${c}m$s${ESC}[0m"
-fun colorbg(s: Any, c: Int) = "${ESC}[${c + 10}m$s${ESC}[0m"
+fun colorfg(s: Any, c: Int) = "$ESC[${c}m$s$ESC[0m"
+fun colorbg(s: Any, c: Int) = "$ESC[${c + 10}m$s$ESC[0m"
 
 /**
  * A small interface for a checker scripts
@@ -108,7 +106,6 @@ class Checker : CliktCommand() {
     val debug by option("-d", "--debug", help = "more verbose output")
         .flag("--no-debug")
 
-
     val readContractNames by option(
         "--read-contract-names-from-file",
         help = "if set, the contract names are read from the proof file contents"
@@ -130,13 +127,13 @@ class Checker : CliktCommand() {
     val appendStatistics by option(
         "--append-stat",
         help = "Normally, the `statisticsFile' is overriden by the ci-too. " +
-                "If set the statistics are appended to the JSON data structure."
+            "If set the statistics are appended to the JSON data structure."
     ).flag()
 
     val dryRun by option(
         "--dry-run",
         help = "skipping the proof reloading, scripts execution and auto mode." +
-                " Useful for finding the contract names"
+            " Useful for finding the contract names"
     ).flag()
 
     val classpath by option(
@@ -243,7 +240,6 @@ class Checker : CliktCommand() {
         currentPrintLevel--
     }
 
-
     fun printm(message: String, fg: Int? = null, bg: Int? = null) {
         print("  ".repeat(currentPrintLevel))
         val m =
@@ -267,10 +263,12 @@ class Checker : CliktCommand() {
 
     fun run(inputFile: String) {
         printBlock("Start with `$inputFile`") {
-            val pm = KeYApi.loadProof(File(inputFile),
+            val pm = KeYApi.loadProof(
+                File(inputFile),
                 classpath.map { File(it) },
                 bootClassPath?.let { File(it) },
-                includes.map { File(it) })
+                includes.map { File(it) }
+            )
 
             val contracts = pm.proofContracts
                 .filter { it.name in onlyContracts || onlyContracts.isEmpty() }
@@ -316,8 +314,8 @@ class Checker : CliktCommand() {
             }
             printm(
                 "[INFO] Summary for $inputFile: " +
-                        "(successful/ignored/failure) " +
-                        "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
+                    "(successful/ignored/failure) " +
+                    "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
             )
             if (failure != 0)
                 error("$inputFile failed!")
@@ -335,7 +333,6 @@ class Checker : CliktCommand() {
         val scriptFile = findScriptFile(contract.name)
         val ui = proofApi.env.ui as AbstractUserInterfaceControl
         val pc = proofApi.env.proofControl as AbstractProofControl
-
 
         val closed = when {
             proofFile != null -> {
@@ -435,9 +432,7 @@ class Checker : CliktCommand() {
         } finally {
             env.dispose()
         }
-
     }
-
 
     private fun printStatistics(proof: Proof) {
         if (statisticsFile != null) {
@@ -478,7 +473,6 @@ class Checker : CliktCommand() {
         }
     }
 
-
     private fun findProofFile(contractName: String): File? =
         if (contractName in contractNameToProofFile) {
             contractNameToProofFile[contractName]
@@ -489,7 +483,6 @@ class Checker : CliktCommand() {
                 name.startsWith(filename) && (name.endsWith(".proof") || name.endsWith(".proof.gz"))
             }
         }
-
 
     private fun findScriptFile(filename: String): File? =
         proofFileCandidates.find {
@@ -559,7 +552,6 @@ private fun extractContractName(it: File): String? {
     }
 }
 
-
 enum class ProofState {
     Success, Failed, Skipped, Error
 }
@@ -587,7 +579,7 @@ class MeasuringMacro : SequentialProofMacro() {
         return arrayOf(
             AutoPilotPrepareProofMacro(),
             GatherStatistics(before),
-            AutoMacro(), //or TryCloseMacro()?
+            AutoMacro(), // or TryCloseMacro()?
             GatherStatistics(after)
         )
     }

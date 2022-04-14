@@ -180,18 +180,18 @@ class PrettyPrinterDoc(
 
         if (null != ctx.ONEOF()) {
             doc = doc + space + ctx.ONEOF().text + space +
-                surround_separate_map(
-                    INDENT, 1, empty,
-                    lbrace, comma + space, rbrace, ctx.oneof_sorts().sortId()
-                ) {
-                    ref(it.text, SORT)
-                }
+                    surround_separate_map(
+                        INDENT, 1, empty,
+                        lbrace, comma + space, rbrace, ctx.oneof_sorts().sortId()
+                    ) {
+                        ref(it.text, SORT)
+                    }
         }
         if (null != ctx.EXTENDS()) {
             doc = doc + space + ctx.EXTENDS().text + space +
-                separate_map(comma + space, ctx.sortExt.sortId()) {
-                    it.accept(this)
-                }
+                    separate_map(comma + space, ctx.sortExt.sortId()) {
+                        it.accept(this)
+                    }
         }
         return doc + semi
     }
@@ -388,10 +388,10 @@ class PrettyPrinterDoc(
 
     override fun visitTaclet(ctx: KeYParser.TacletContext): Document {
         var d: Document = docOf(ctx.LEMMA(), trailing = space) +
-            accept(ctx.name) +
-            docOf(ctx.choices_) +
-            space + lbrace + hardline +
-            docOf(ctx.form)
+                accept(ctx.name) +
+                docOf(ctx.choices_) +
+                space + lbrace + hardline +
+                docOf(ctx.form)
 
         if (ctx.SCHEMAVAR().isNotEmpty()) {
             d = d + concat(
@@ -403,7 +403,7 @@ class PrettyPrinterDoc(
 
         ctx.ifSeq?.let {
             d = docOf(ctx.ASSUMES()) +
-                lparen + accept(it) + rparen + hardline
+                    lparen + accept(it) + rparen + hardline
         }
 
         ctx.find?.let {
@@ -608,7 +608,7 @@ class PrettyPrinterStr(
         parenthesisIds.push(p)
         val c = rainbowColors[p % rainbowColors.size]
         return "<span style=\"color:$c\" " +
-            "class=\"paired-element\" id=\"open-${p}\" mouseover=\"highlight($p)\">${token.text}</span>"
+                "class=\"paired-element\" id=\"open-${p}\" mouseover=\"highlight($p)\">${token.text}</span>"
     }
 
     private fun closeParenthesis(token: Token): String {

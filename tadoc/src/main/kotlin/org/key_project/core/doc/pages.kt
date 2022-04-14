@@ -103,7 +103,7 @@ abstract class DefaultPage(
             .filter { it.type != Symbol.Type.FILE && it.type != Symbol.Type.EXTERNAL }
             .groupBy { it.type }
         cat.forEach { c ->
-            li() {
+            li {
                 +c.key.navigationTitle
                 ul {
                     c.value.sortedBy { it.displayName }.forEach {

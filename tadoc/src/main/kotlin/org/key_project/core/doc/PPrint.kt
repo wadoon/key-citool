@@ -20,11 +20,33 @@
 
 package org.key_project.core.doc
 
+import org.key_project.core.doc.Document.Group
+import org.key_project.core.doc.Document.HardLine
+import org.key_project.core.doc.Document.IfFlat
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Integer.max
 import java.lang.Integer.min
 import java.util.*
+import kotlin.Boolean
+import kotlin.Char
+import kotlin.Double
+import kotlin.IllegalArgumentException
+import kotlin.Int
+import kotlin.Pair
+import kotlin.String
+import kotlin.Suppress
+import kotlin.Unit
+import kotlin.also
+import kotlin.let
+import kotlin.require
+import kotlin.text.String
+import kotlin.text.indexOf
+import kotlin.text.repeat
+import kotlin.text.split
+import kotlin.text.substring
+import kotlin.text.toCharArray
+import kotlin.to
 
 /** A point is a pair of a line number and a column number. */
 typealias Point = Pair<Int, Int>
@@ -61,22 +83,22 @@ is subject to change in future versions of the library. Nevertheless, it is
 exposed to the user who wishes to define custom documents. */
 data class State(
     /** The line width. This parameter is fixed throughout the execution of
-     the renderer. */
+    the renderer. */
     val width: Int,
     /** The ribbon width. This parameter is fixed throughout the execution of
-     the renderer. */
+    the renderer. */
     val ribbon: Int,
     /** The number of blanks that were printed at the beginning of the current
-     line. This field is updated (only) when a hardline is emitted. It is
-     used (only) to determine whether the ribbon width constraint is
-     respected. */
+    line. This field is updated (only) when a hardline is emitted. It is
+    used (only) to determine whether the ribbon width constraint is
+    respected. */
     var lastIndent: Int = 0,
     /** The current line. This field is updated (only) when a hardline is
-     emitted. It is not used by the pretty-printing engine itself. */
+    emitted. It is not used by the pretty-printing engine itself. */
     var line: Int = 0,
     /** The current column. This field must be updated whenever something is
-     sent to the output channel. It is used (only) to determine whether the
-     width constraint is respected. */
+    sent to the output channel. It is used (only) to determine whether the
+    width constraint is respected. */
     var column: Int = 0
 ) {
     constructor(width: Int, rfrac: Double) : this(width, max(0, min(width, (width * rfrac).toInt())))
@@ -85,26 +107,26 @@ data class State(
 /** A custom document is defined by implementing the following methods. */
 interface CustomDocument {
     /** A custom document must publish the width (i.e., the number of columns)
-     that it would like to occupy if it is printed on a single line (that is,
-     in flattening mode). The special value [infinity] means that this
-     document cannot be printed on a single line; this value causes any
-     groups that contain this document to be dissolved. This method should
-     in principle work in constant time. */
+    that it would like to occupy if it is printed on a single line (that is,
+    in flattening mode). The special value [infinity] means that this
+    document cannot be printed on a single line; this value causes any
+    groups that contain this document to be dissolved. This method should
+    in principle work in constant time. */
     val requirement: Requirement
 
     /** The method [pretty] is used by the main rendering algorithm. It has
-     access to the output channel and to the algorithm's internal state, as
-     described above. In addition, it receives the current indentation level
-     and the current flattening mode (on or off). If flattening mode is on,
-     then the document must be printed on a single line, in a manner that is
-     consistent with the Requirement that was published ahead of time. If
-     flattening mode is off, then there is no such obligation. The state must
-     be updated in a manner that is consistent with what is sent to the
-     output channel. */
+    access to the output channel and to the algorithm's internal state, as
+    described above. In addition, it receives the current indentation level
+    and the current flattening mode (on or off). If flattening mode is on,
+    then the document must be printed on a single line, in a manner that is
+    consistent with the Requirement that was published ahead of time. If
+    flattening mode is off, then there is no such obligation. The state must
+    be updated in a manner that is consistent with what is sent to the
+    output channel. */
     fun pretty(o: PrintWriter, s: State, i: Int, b: Boolean)
 
     /** The method [compact] is used by the compact rendering algorithm. It has
-     access to the output channel only. */
+    access to the output channel only. */
     fun compact(o: PrintWriter)
 }
 
@@ -120,21 +142,21 @@ sealed class Document {
     object Empty : Document()
 
     /** [Char c] is a document that consists of the single character [c]. We
-     enforce the invariant that [c] is not a newline character. */
+    enforce the invariant that [c] is not a newline character. */
     data class Char(val char: kotlin.Char) : Document()
 
     /** [String s] is a document that consists of just the string [s]. We
-     assume, but do not check, that this string does not contain a newline
-     character. [String] is a special case of [FancyString], which takes up
-     less space in memory. */
+    assume, but do not check, that this string does not contain a newline
+    character. [String] is a special case of [FancyString], which takes up
+    less space in memory. */
     data class String(val s: kotlin.String) : Document()
 
     /** [FancyString (s, ofs, len, apparent_length)] is a (portion of a) string
-     that may contain fancy characters: color escape characters, UTF-8 or
-     multi-byte characters, etc. Thus, the apparent length (which corresponds
-     to what will be visible on screen) differs from the length (which is a
-     number of bytes, and is reported by [String.length]). We assume, but do
-     not check, that fancystrings do not contain a newline character. */
+    that may contain fancy characters: color escape characters, UTF-8 or
+    multi-byte characters, etc. Thus, the apparent length (which corresponds
+    to what will be visible on screen) differs from the length (which is a
+    number of bytes, and is reported by [String.length]). We assume, but do
+    not check, that fancystrings do not contain a newline character. */
     data class FancyString(
         val s: kotlin.String,
         val ofs: Int,
@@ -148,63 +170,63 @@ sealed class Document {
     data class Blank(val len: Int) : Document()
 
     /** When in flattening mode, [IfFlat (d1, d2)] turns into the document
-     [d1]. When not in flattening mode, it turns into the document [d2]. */
+    [d1]. When not in flattening mode, it turns into the document [d2]. */
     data class IfFlat(val doc1: Document, val doc2: Document) : Document()
 
     /** When in flattening mode, [HardLine] causes a failure, which requires
-     backtracking all the way until the stack is empty. When not in flattening
-     mode, it represents a newline character, followed with an appropriate
-     number of indentation. A common way of using [HardLine] is to only use it
-     directly within the right branch of an [IfFlat] construct. */
+    backtracking all the way until the stack is empty. When not in flattening
+    mode, it represents a newline character, followed with an appropriate
+    number of indentation. A common way of using [HardLine] is to only use it
+    directly within the right branch of an [IfFlat] construct. */
     object HardLine : Document()
 
     /** The following constructors store their space Requirement. This is the
-     document's apparent length, if printed in flattening mode. This
-     information is computed in a bottom-up manner when the document is
-     constructed. */
+    document's apparent length, if printed in flattening mode. This
+    information is computed in a bottom-up manner when the document is
+    constructed. */
 
     /** In other words, the space Requirement is the number of columns that the
-     document needs in order to fit on a single line. We express this value in
-     the set of `integers extended with infinity', and use the value
-     [infinity] to indicate that the document cannot be printed on a single
-     line. */
+    document needs in order to fit on a single line. We express this value in
+    the set of `integers extended with infinity', and use the value
+    [infinity] to indicate that the document cannot be printed on a single
+    line. */
 
     /** Storing this information at [Group] nodes is crucial, as it allows us to
-     avoid backtracking and buffering. */
+    avoid backtracking and buffering. */
 
     /** Storing this information at other nodes allows the function [Requirement]
-     to operate in constant time. This means that the bottom-up computation of
-     requirements takes linear time. */
+    to operate in constant time. This means that the bottom-up computation of
+    requirements takes linear time. */
 
     /** [Cat (req, doc1, doc2)] is the concatenation of the documents [doc1] and
-     [doc2]. The space Requirement [req] is the sum of the requirements of
-     [doc1] and [doc2]. */
+    [doc2]. The space Requirement [req] is the sum of the requirements of
+    [doc1] and [doc2]. */
 
     data class Cat(val req: Requirement, val doc1: Document, val doc2: Document) : Document()
 
     /** [Nest (req, j, doc)] is the document [doc], in which the indentation
-     level has been increased by [j], that is, in which [j] blanks have been
-     inserted after every newline character. The space Requirement [req] is
-     the same as the Requirement of [doc]. */
+    level has been increased by [j], that is, in which [j] blanks have been
+    inserted after every newline character. The space Requirement [req] is
+    the same as the Requirement of [doc]. */
 
     data class Nest(val req: Requirement, val j: Int, val doc: Document) : Document()
 
     /** [Group (req, doc)] represents an alternative: it is either a flattened
-     form of [doc], in which occurrences of [Group] disappear and occurrences
-     of [IfFlat] resolve to their left branch, or [doc] itself. The space
-     Requirement [req] is the same as the Requirement of [doc]. */
+    form of [doc], in which occurrences of [Group] disappear and occurrences
+    of [IfFlat] resolve to their left branch, or [doc] itself. The space
+    Requirement [req] is the same as the Requirement of [doc]. */
 
     data class Group(val req: Requirement, val doc: Document) : Document()
 
     /** [Align (req, doc)] increases the indentation level to reach the current
-     column.  Thus, the document [doc] is rendered within a box whose upper
-     left corner is the current position. The space Requirement [req] is the
-     same as the Requirement of [doc]. */
+    column.  Thus, the document [doc] is rendered within a box whose upper
+    left corner is the current position. The space Requirement [req] is the
+    same as the Requirement of [doc]. */
     data class Align(val req: Requirement, val doc: Document) : Document()
 
     /** [Range (req, hook, doc)] is printed like [doc]. After it is printed, the
-     function [hook] is applied to the range that is occupied by [doc] in the
-     output. */
+    function [hook] is applied to the range that is occupied by [doc] in the
+    output. */
     data class Range(val req: Requirement, val fn: (PointRange) -> Unit, val doc: Document) : Document()
 
     /** [Custom (req, f)] is a document whose appearance is user-defined. */
@@ -214,28 +236,28 @@ sealed class Document {
 /* Retrieving or computing the space Requirement of a document. */
 tailrec fun Requirement(x: Document): Requirement =
     when (x) {
-        is Empty -> Requirement(0)
+        is Document.Empty -> Requirement(0)
         is Document.Char -> Requirement(1)
         is Document.String -> Requirement(x.s.length)
-        is FancyString -> Requirement(x.apperentLength)
-        is Blank -> Requirement(x.len)
+        is Document.FancyString -> Requirement(x.apperentLength)
+        is Document.Blank -> Requirement(x.len)
         /* In flattening mode, the Requirement of [ifflat x y] is just the
         Requirement of its flat version, [x]. */
         /* The smart constructor [ifflat] ensures that [IfFlat] is never nested
         in the left-hand side of [IfFlat], so this recursive call is not a
         problem; the function [Requirement] has constant time complexity. */
-        is IfFlat -> Requirement(x.doc1)
+        is Document.IfFlat -> Requirement(x.doc1)
         /* A hard line cannot be printed in flattening mode. */
-        is HardLine -> infinity
+        is Document.HardLine -> infinity
 
         /* These nodes store their Requirement -- which is computed when the
         node is constructed -- so as to allow us to answer in constant time
         here. */
-        is Cat -> x.req
-        is Nest -> x.req
-        is Group -> x.req
-        is Align -> x.req
-        is Range -> x.req
+        is Document.Cat -> x.req
+        is Document.Nest -> x.req
+        is Document.Group -> x.req
+        is Document.Align -> x.req
+        is Document.Range -> x.req
         // | Custom c -> c#Requirement
         else -> throw IllegalArgumentException()
     }
@@ -245,13 +267,13 @@ tailrec fun Requirement(x: Document): Requirement =
 expose the following functions. These functions construct a raw document
 and compute its Requirement, so as to obtain a document. */
 
-val empty = Empty
-fun char(c: Char) = Char(c).also { require(c != '\n') }
-val space = Blank(1)
-fun string(s: String) = String(s)
+val empty = Document.Empty
+fun char(c: Char) = Document.Char(c).also { require(c != '\n') }
+val space = Document.Blank(1)
+fun string(s: String) = Document.String(s)
 fun fancysubstring(s: String, ofs: Int, len: Int, apparentLength: Int) =
     if (len == 0) empty
-    else FancyString(s, ofs, len, apparentLength)
+    else Document.FancyString(s, ofs, len, apparentLength)
 
 fun substring(s: String, ofs: Int, len: Int) = fancysubstring(s, ofs, len, len)
 fun fancystring(s: String, apparentLength: Int) = fancysubstring(s, 0, s.length, apparentLength)
@@ -272,7 +294,7 @@ fun utf8string(s: String) = fancystring(s, utf8_length(s))
 
 // fun utf8format(f: String) = Printf.ksprintf utf8string f
 val hardline = HardLine
-fun blank(n: Int) = if (n == 0) empty else Blank(n)
+fun blank(n: Int) = if (n == 0) empty else Document.Blank(n)
 
 fun ifflat(doc1: Document, doc2: Document) = IfFlat(doc1, doc2)
 /* Avoid nesting [IfFlat] in the left-hand side of [IfFlat], as this
@@ -293,11 +315,11 @@ fun break_(i: Int) = when (i) {
 }
 
 fun cat(x: Document, y: Document) = // ^^
-    if (x is Empty) y else if (y is Empty) x else Cat(Requirement(x) + Requirement(y), x, y)
+    if (x is Document.Empty) y else if (y is Document.Empty) x else Document.Cat(Requirement(x) + Requirement(y), x, y)
 
 fun nest(i: Int, x: Document) =
     // assert (i >= 0);
-    Nest(Requirement(x), i, x)
+    Document.Nest(Requirement(x), i, x)
 
 fun group(x: Document): Document {
     val req = Requirement(x)
@@ -305,9 +327,9 @@ fun group(x: Document): Document {
     return if (req.isInfinity) x else Group(req, x)
 }
 
-fun align(x: Document) = Align(Requirement(x), x)
+fun align(x: Document) = Document.Align(Requirement(x), x)
 
-fun range(hook: (PointRange) -> Unit, x: Document) = Range(Requirement(x), hook, x)
+fun range(hook: (PointRange) -> Unit, x: Document) = Document.Range(Requirement(x), hook, x)
 
 /*let custom c =
 assert (c#Requirement >= 0);
@@ -378,7 +400,7 @@ tailrec fun prettyQ(
 
     fun handle(indent: Int, flatten: Boolean, doc: Document, cont: Continuation) =
         when (doc) {
-            is Empty -> {}
+            is Document.Empty -> {}
             is Document.Char -> {
                 output.print(doc.char)
                 state.column = state.column + 1
@@ -390,19 +412,19 @@ tailrec fun prettyQ(
                 /* assert (ok state flatten); */
                 proceed(cont)
             }
-            is FancyString -> {
+            is Document.FancyString -> {
                 output.print(doc.s.substring(doc.ofs, doc.len))
                 state.column = state.column + doc.apperentLength
                 /* assert (ok state flatten); */
                 proceed(cont)
             }
-            is Blank -> {
+            is Document.Blank -> {
                 output.print(" ".repeat(doc.len))
                 state.column = state.column + doc.len
                 /* assert (ok state flatten); */
                 proceed(cont)
             }
-            is HardLine -> {
+            is Document.HardLine -> {
                 /* We cannot be in flattening mode, because a hard line has an [infinity]
                    Requirement, and we attempt to render a group in flattening mode only
                    if this group's Requirement is met. */
@@ -415,11 +437,11 @@ tailrec fun prettyQ(
                 state.lastIndent = indent
                 proceed(cont)
             }
-            is IfFlat -> {
+            is Document.IfFlat -> {
                 /* Pick an appropriate sub-document, based on the current flattening mode. */
                 proceed(KCons(indent, flatten, if (flatten) doc.doc1 else doc.doc2, cont))
             }
-            is Cat ->
+            is Document.Cat ->
                 /* Push the second document onto the continuation. */
                 proceed(
                     KCons(
@@ -428,10 +450,10 @@ tailrec fun prettyQ(
                     )
                 )
 
-            is Nest ->
+            is Document.Nest ->
                 proceed(KCons(indent + doc.j, flatten, doc.doc, cont))
 
-            is Group -> {
+            is Document.Group -> {
                 /* If we already are in flattening mode, stay in flattening mode; we
                 are committed to it. If we are not already in flattening mode, we
                 have a choice of entering flattening mode. We enter this mode only
@@ -441,7 +463,7 @@ tailrec fun prettyQ(
                 val flatten2 = flatten || column <= state.width && column <= state.lastIndent + state.ribbon
                 proceed(KCons(indent, flatten2, doc.doc, cont))
             }
-            is Align ->
+            is Document.Align ->
                 /* The effect of this combinator is to set [indent] to [state.column].
                 Usually [indent] is equal to [state.last_indent], hence setting it
                 to [state.column] increases it. However, if [nest] has been used
@@ -450,11 +472,11 @@ tailrec fun prettyQ(
                 /* assert (state.column > state.last_indent); */
                 proceed(KCons(state.column, flatten, doc.doc, cont))
 
-            is Range -> {
+            is Document.Range -> {
                 val start: Point = state.line to state.column
                 proceed(KCons(state.column, flatten, doc.doc, KRange(doc.fn, start, cont)))
             }
-            is Custom -> {
+            is Document.Custom -> {
                 /* Invoke the document's custom rendering function. */
                 doc.doc.pretty(output, state, indent, flatten)
                 /* Sanity check. */
@@ -490,7 +512,7 @@ tailrec fun pretty(
     cont: Continuation
 ) {
     when (doc) {
-        is Empty -> proceed(output, state, cont)
+        is Document.Empty -> proceed(output, state, cont)
         is Document.Char
         -> {
             output.print(doc.char)
@@ -504,19 +526,19 @@ tailrec fun pretty(
             /* assert (ok state flatten); */
             proceed(output, state, cont)
         }
-        is FancyString -> {
+        is Document.FancyString -> {
             output.print(doc.s.substring(doc.ofs, doc.len))
             state.column = state.column + doc.apperentLength
             /* assert (ok state flatten); */
             proceed(output, state, cont)
         }
-        is Blank -> {
+        is Document.Blank -> {
             output.print(" ".repeat(doc.len))
             state.column = state.column + doc.len
             /* assert (ok state flatten); */
             proceed(output, state, cont)
         }
-        is HardLine -> {
+        is Document.HardLine -> {
             /* We cannot be in flattening mode, because a hard line has an [infinity]
                Requirement, and we attempt to render a group in flattening mode only
                if this group's Requirement is met. */
@@ -534,14 +556,14 @@ tailrec fun pretty(
             mode. */
             pretty(output, state, indent, flatten, if (flatten) doc.doc1 else doc.doc2, cont)
         }
-        is Cat ->
+        is Document.Cat ->
             /* Push the second document onto the continuation. */
             pretty(
                 output, state, indent, flatten, doc.doc1,
                 KCons(indent, flatten, doc.doc2, cont)
             )
 
-        is Nest ->
+        is Document.Nest ->
             pretty(output, state, indent + doc.j, flatten, doc.doc, cont)
 
         is Group ->
@@ -550,11 +572,11 @@ tailrec fun pretty(
             have a choice of entering flattening mode. We enter this mode only
             if we know that this group fits on this line without violating the
             width or ribbon width constraints. Thus, we never backtrack. */ {
-                val column = Requirement(state.column) + doc.req
-                val flatten2 = flatten || column <= state.width && column <= state.lastIndent + state.ribbon
-                pretty(output, state, indent, flatten2, doc.doc, cont)
-            }
-        is Align ->
+            val column = Requirement(state.column) + doc.req
+            val flatten2 = flatten || column <= state.width && column <= state.lastIndent + state.ribbon
+            pretty(output, state, indent, flatten2, doc.doc, cont)
+        }
+        is Document.Align ->
             /* The effect of this combinator is to set [indent] to [state.column].
             Usually [indent] is equal to [state.last_indent], hence setting it
             to [state.column] increases it. However, if [nest] has been used
@@ -563,7 +585,7 @@ tailrec fun pretty(
             /* assert (state.column > state.last_indent); */
             pretty(output, state, state.column, flatten, doc.doc, cont)
 
-        is Range -> {
+        is Document.Range -> {
             val start: Point = state.line to state.column
             pretty(output, state, indent, flatten, doc.doc, KRange(doc.fn, start, cont))
         }
@@ -609,7 +631,7 @@ fun compact(output: PrintWriter, doc: Document) = compact(output, doc, listOf())
 
 tailrec fun compact(output: PrintWriter, doc: Document, cont: List<Document>) {
     when (doc) {
-        is Empty -> proceedc(output, cont)
+        is Document.Empty -> proceedc(output, cont)
         is Document.Char -> {
             output.print(doc.char)
             proceedc(output, cont)
@@ -619,11 +641,11 @@ tailrec fun compact(output: PrintWriter, doc: Document, cont: List<Document>) {
             output.print(doc.s.substring(0, len))
             proceedc(output, cont)
         }
-        is FancyString -> {
+        is Document.FancyString -> {
             output.print(doc.s.substring(doc.ofs, doc.len))
             proceedc(output, cont)
         }
-        is Blank -> {
+        is Document.Blank -> {
             output.print(" ".repeat(doc.len))
             proceedc(output, cont)
         }
@@ -631,13 +653,13 @@ tailrec fun compact(output: PrintWriter, doc: Document, cont: List<Document>) {
             output.print('\n')
             proceedc(output, cont)
         }
-        is Cat ->
+        is Document.Cat ->
             proceedc(output, listOf(doc.doc1, doc.doc2) + cont)
         is IfFlat -> compact(output, doc.doc1, cont)
-        is Nest -> compact(output, doc.doc, cont)
+        is Document.Nest -> compact(output, doc.doc, cont)
         is Group -> compact(output, doc.doc, cont)
-        is Align -> compact(output, doc.doc, cont)
-        is Range -> compact(output, doc.doc, cont)
+        is Document.Align -> compact(output, doc.doc, cont)
+        is Document.Range -> compact(output, doc.doc, cont)
         // is document.Custom ->
         //    /* Invoke the document's custom rendering function. */
         //    c#compact output;

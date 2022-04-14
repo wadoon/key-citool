@@ -18,7 +18,6 @@
  */
 package de.uka.ilkd.key
 
-import de.uka.ilkd.key.obj2json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -42,7 +41,6 @@ class Cli {
         assertEquals("{\"abc\" : {\"abc\" : 2}}", obj2json(hashMapOf("abc" to hashMapOf("abc" to 2))))
         assertEquals("{\"abc\" : 2}", obj2json(hashMapOf("abc" to 2)))
     }
-
 
     @Test
     fun empty() {

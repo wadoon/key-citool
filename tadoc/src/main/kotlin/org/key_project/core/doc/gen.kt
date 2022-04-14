@@ -115,8 +115,12 @@ open class Symbol(
     }
 
     companion object {
-        fun choiceCategory(page: String, cat: String, ctx: Any? = null): Symbol = Symbol(cat, page, cat, Type.CATEGORY, ctx)
-        fun choiceOption(page: String, cat: String, option: String, ctx: Any? = null): Symbol = Symbol("$cat:$option", page, "$cat-$option", Type.OPTION, ctx)
+        fun choiceCategory(page: String, cat: String, ctx: Any? = null): Symbol =
+            Symbol(cat, page, cat, Type.CATEGORY, ctx)
+
+        fun choiceOption(page: String, cat: String, option: String, ctx: Any? = null): Symbol =
+            Symbol("$cat:$option", page, "$cat-$option", Type.OPTION, ctx)
+
         fun taclet(page: String, text: String, ctx: Any? = null) = Symbol(text, page, text, Type.TACLET, ctx)
         fun predicate(page: String, text: String, ctx: Any? = null) = Symbol(text, page, text, Type.PREDICATE, ctx)
         fun function(page: String, text: String, ctx: Any? = null) = Symbol(text, page, text, Type.FUNCTION, ctx)
@@ -125,10 +129,11 @@ open class Symbol(
         fun file(self: String, ctx: Any? = null) = Symbol(self.replace(".html", ""), self, "root", Type.FILE, ctx)
         fun ruleset(name: String, page: String, ctx: Any? = null) = Symbol(name, page, name, Type.RULESET, ctx)
         fun token(display: String, tokenType: Int) = TokenSymbol(display, tokenType)
-        fun external(url: String, anchor: String = "", ctx: Any? = null) = object : Symbol("", url, "", Type.EXTERNAL, ctx) {
-            override val anchor: String = anchor
-            override val href = url
-        }
+        fun external(url: String, anchor: String = "", ctx: Any? = null) =
+            object : Symbol("", url, "", Type.EXTERNAL, ctx) {
+                override val anchor: String = anchor
+                override val href = url
+            }
 
         fun contract(name: String, self: String, ctx: Any? = null) = Symbol(name, self, name, Type.CONTRACT, ctx)
         fun invariant(name: String, self: String, ctx: Any? = null) = Symbol(name, self, name, Type.INVARIANT, ctx)

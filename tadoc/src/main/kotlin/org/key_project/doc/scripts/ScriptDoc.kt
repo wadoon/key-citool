@@ -66,7 +66,7 @@ class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for 
     }
 
     private fun writeTacletDocumentation(stream: DIV) {
-        stream.section() {
+        stream.section {
             h2 { +"Taclets" }
             div {
                 for (t in taclets) {
@@ -86,7 +86,7 @@ class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for 
     private fun writeMacros(stream: DIV) {
         val macros = ArrayList(KeYApi.getMacroApi().macros)
         macros.sortWith(Comparator.comparing { obj: ProofMacro -> obj.scriptCommandName })
-        stream.section() {
+        stream.section {
             h2 { +"Macros" }
             for (t in macros) {
                 div {
