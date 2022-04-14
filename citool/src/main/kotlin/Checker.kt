@@ -36,6 +36,7 @@ import de.uka.ilkd.key.control.AbstractUserInterfaceControl
 import de.uka.ilkd.key.control.KeYEnvironment
 import de.uka.ilkd.key.control.UserInterfaceControl
 import de.uka.ilkd.key.logic.PosInOccurrence
+import de.uka.ilkd.key.macros.*
 import de.uka.ilkd.key.macros.scripts.ProofScriptEngine
 import de.uka.ilkd.key.parser.Location
 import de.uka.ilkd.key.proof.Goal
