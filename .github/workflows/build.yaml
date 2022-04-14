@@ -36,17 +36,26 @@ jobs:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
+
       - name: Build
+        env:
+          GRADLE_OPTS:  "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
         run: ./gradlew classes
+
       - name: Running Tests
         run: ./gradlew test
+
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonarqube
+          GRADLE_OPTS:  "-Dorg.gradle.jvmargs=-Xmx12g -Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=2 -Dorg.gradle.configureondemand=true"
+          SONAR_RUNNER_OPTS: "-Xmx3062m -XX:MaxPermSize=512m -XX:ReservedCodeCacheSize=128m"
+        run: ./gradlew sonarqube
+
       - name: Build JAR Files
         run: ./gradlew jar
+
       - name: Cleanup Gradle Cache
         # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
         # Restoring these files from a GitHub Actions cache might cause problems for future builds.
