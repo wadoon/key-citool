@@ -111,8 +111,8 @@ subprojects {
             licenseHeaderFile("$rootDir/gradle/license_header")  // '/* (C)$YEAR */' // or licenseHeaderFile
         }
         kotlinGradle {
-            target("*.gradle.kts") // default target for kotlinGradle
-            ktlint() // or ktfmt() or prettier()
+            //target("*.gradle.kts") // default target for kotlinGradle
+            //ktlint() // or ktfmt() or prettier()
         }
     }
 
