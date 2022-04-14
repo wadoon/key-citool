@@ -1,5 +1,6 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.sonarqube.gradle.SonarQubeExtension
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.5.31" apply (false)
@@ -7,11 +8,22 @@ plugins {
     `maven-publish`
     `java-library`
     id("com.diffplug.spotless") version "6.4.2" apply false
+
+    id("org.sonarqube") version "3.3"
 }
 
 repositories {
     mavenCentral()
 }
+
+configure<SonarQubeExtension> {
+    properties {
+        property("sonar.projectKey", "wadoon_key-tools")
+        property("sonar.organization", "wadoon")
+        property("sonar.host.url", "https://sonarcloud.io")
+    }
+}
+
 
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
