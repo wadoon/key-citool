@@ -99,12 +99,12 @@ subprojects {
         kotlin {
             // by default the target is every '.kt' and '.kts` file in the java sourcesets
             //ktfmt()    // has its own section below
-            ktlint().userData(
+            /*ktlint().userData(
                 mapOf(
                     "disabled_rules" to "no-wildcard-imports",
                     "insert_final_newline" to "true"
                 )
-            )
+            )*/
             // has its own section below
             //diktat()   // has its own section below
             //prettier() // has its own section below
