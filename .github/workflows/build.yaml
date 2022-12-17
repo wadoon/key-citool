@@ -51,7 +51,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GRADLE_OPTS:  "-Dorg.gradle.jvmargs=-Xmx12g -Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=2 -Dorg.gradle.configureondemand=true"
           SONAR_RUNNER_OPTS: "-Xmx3062m -XX:MaxPermSize=512m -XX:ReservedCodeCacheSize=128m"
-        run: ./gradlew sonarqube
+        run: ./gradlew check
 
       - name: Build JAR Files
         run: ./gradlew jar
