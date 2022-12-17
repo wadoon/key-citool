@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.7.20"
@@ -29,7 +30,6 @@ repositories {
 dependencies {
     val implementation by configurations
 
-    val plugin by configurations
     plugin(platform("org.jetbrains.kotlin:kotlin-bom"))
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     plugin("com.github.ajalt:clikt:2.8.0")
