@@ -44,6 +44,13 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
     testImplementation("com.google.truth:truth:1.1.3")
     testImplementation("org.slf4j:slf4j-simple:1.7.33")
+
+
+    implementation("org.key_project:key.core:2.10.0")
+    implementation("org.key_project:key.util:2.10.0")
+
+    plugin("org.slf4j:slf4j-simple:1.7.36")
+    plugin("com.google.code.gson:gson:2.9.0")
 }
 
 tasks.withType<KotlinCompile> {
@@ -76,24 +83,13 @@ tasks.withType<Javadoc>() {
     isFailOnError = false
 }
 
-dependencies {
-    implementation("org.key_project:key.core:2.10.0")
-    implementation("org.key_project:key.util:2.10.0")
-
-    val plugin by configurations
-    plugin("org.slf4j:slf4j-simple:1.7.36")
-    plugin("com.google.code.gson:gson:2.9.0")
-}
-
-val plugin by configurations
-
 tasks.register<ShadowJar>("miniShadowJar") {
     group = "shadow"
     archiveClassifier.set("mini")
     /*dependencies {
-        exclude(dependency("org.key_project:key.core"))
-        exclude(dependency("org.key_project:key.util"))
-    }*/
+     exclude(dependency("org.key_project:key.core"))
+     exclude(dependency("org.key_project:key.util"))
+ }*/
     from(sourceSets.getByName("main").output)
     configurations = listOf(plugin)
     manifest {
