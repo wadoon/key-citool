@@ -1,6 +1,4 @@
-import com.diffplug.gradle.spotless.SpotlessExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.sonarqube.gradle.SonarQubeExtension
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.7.20"
