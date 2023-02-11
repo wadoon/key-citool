@@ -1,5 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.7.20"
@@ -9,15 +9,15 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-group = "com.github.wadoon.keytools"
-version = "1.4.0"
+group = "io.github.wadoon"
+version = "1.5.0-snapshot"
 
 
 repositories {
     mavenCentral()
 }
 
-val plugin by configurations.creating
+val plugin: Configuration by configurations.creating
 configurations {
     implementation.get().extendsFrom(plugin)
 }
@@ -35,8 +35,8 @@ dependencies {
     plugin("com.github.ajalt:clikt:2.8.0")
     plugin("org.jetbrains:annotations:23.0.0")
     plugin("org.slf4j:slf4j-api:1.7.33")
-
-    //    implementation("org.key_project:key.core")
+    plugin("org.slf4j:slf4j-simple:1.7.36")
+    plugin("com.google.code.gson:gson:2.9.0")
 
     val testImplementation by configurations
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
@@ -45,12 +45,8 @@ dependencies {
     testImplementation("com.google.truth:truth:1.1.3")
     testImplementation("org.slf4j:slf4j-simple:1.7.33")
 
-
     implementation("org.key_project:key.core:2.10.0")
     implementation("org.key_project:key.util:2.10.0")
-
-    plugin("org.slf4j:slf4j-simple:1.7.36")
-    plugin("com.google.code.gson:gson:2.9.0")
 }
 
 tasks.withType<KotlinCompile> {
@@ -79,17 +75,13 @@ java {
     withSourcesJar()
 }
 
-tasks.withType<Javadoc>() {
+tasks.withType<Javadoc> {
     isFailOnError = false
 }
 
 tasks.register<ShadowJar>("miniShadowJar") {
     group = "shadow"
     archiveClassifier.set("mini")
-    /*dependencies {
-     exclude(dependency("org.key_project:key.core"))
-     exclude(dependency("org.key_project:key.util"))
- }*/
     from(sourceSets.getByName("main").output)
     configurations = listOf(plugin)
     manifest {
@@ -100,5 +92,5 @@ tasks.register<ShadowJar>("miniShadowJar") {
 }
 
 application {
-    mainClassName = "de.uka.ilkd.key.CheckerKt"
+    mainClass.set("de.uka.ilkd.key.CheckerKt")
 }

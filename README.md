@@ -123,5 +123,4 @@ mv "$1" "${name}.proof.gz"
 ## Future features
 
 * Accumulate statistics
-* If proof remains open, 
 * Calculate a coverage based on statements 
