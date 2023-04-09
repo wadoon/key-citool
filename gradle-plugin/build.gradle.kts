@@ -1,4 +1,5 @@
 plugins {
+    `java-library`
     `java-gradle-plugin`
 }
 

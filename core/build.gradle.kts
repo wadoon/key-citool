@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.8.20"
     id("org.jetbrains.dokka") version "1.7.20"
     `java-library`
     id("application")
@@ -28,6 +28,8 @@ repositories {
 }
 
 dependencies {
+    implementation("org.apache.maven.plugin-tools:maven-plugin-tools:3.8.1")
+    implementation("org.apache.maven.plugin-testing:maven-plugin-testing:4.0.0-alpha-1")
     val implementation by configurations
 
     plugin(platform("org.jetbrains.kotlin:kotlin-bom"))
