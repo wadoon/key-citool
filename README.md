@@ -32,12 +32,28 @@ To use the ci-tool add the following lines to the ci config.
    ```bash 
    $ java -jar <jarfile> [files]
    ```
+   
+For the minified version you need to add KeY to the classpath:
+
+   ```bash
+   $ java -cp ci-tool.jar:KeY-2.11.0-exe.jar de.uka.ilkd.key.CheckerKt 
+   ```
 
 4. Find more parameters with `-h`
   
    ```bash
    $ java -jar <jarfile> -h 
    ```
+
+
+### Development
+
+You can build ci-tool with `gradle`.
+```bash 
+gradle shadowJar miniShadowJar
+```
+The binaries are dropped in `build/libs/`.
+
 
 
 ### Examples
@@ -108,8 +124,8 @@ script:
 
 ## Usage hints
 
-ci-tool uses the KeY's default contract names and filenames to find proof files. 
-With the following script, you can restore the filenames based on the stored contract names inside the file. 
+ci-tool uses the KeY's default contract names and filenames to find proof files. With the following script, you can 
+restore the filenames based on the stored contract names inside the file. 
 
 ```bash
 #!/bin/bash -x
