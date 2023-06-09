@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "io.github.wadoon"
-version = "1.5.0-snapshot"
+version = "1.5.0"
 
 
 repositories {
