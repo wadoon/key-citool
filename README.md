@@ -67,6 +67,7 @@ script:
     `--read-contract-names-from-file` in ci-tool, for detection based on content. 
   - [ADD] `--append-statistics` gives you the opportunity to accumulate the statistics of different runs into one file.
   - [ADD] `--color={auto,yes,no}` allows you to configure the use of colors
+  - [ADD] `--default-script <file>` to set a default proof script which is used instead of the full-auto-macro.
   - [ENH] more robustness on loading KeY proofs
 
 
