@@ -52,10 +52,8 @@ import de.uka.ilkd.key.util.MiscTools
 import org.key_project.util.collection.ImmutableList
 import java.io.File
 import java.io.FileInputStream
-import java.util.TreeMap
+import java.util.*
 import java.util.zip.GZIPInputStream
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
@@ -128,13 +126,13 @@ class Checker : CliktCommand() {
     val appendStatistics by option(
         "--append-stat",
         help = "Normally, the `statisticsFile' is overriden by the ci-too. " +
-            "If set the statistics are appended to the JSON data structure."
+                "If set the statistics are appended to the JSON data structure."
     ).flag()
 
     val dryRun by option(
         "--dry-run",
         help = "skipping the proof reloading, scripts execution and auto mode." +
-            " Useful for finding the contract names"
+                " Useful for finding the contract names"
     ).flag()
 
     val classpath by option(
@@ -170,6 +168,13 @@ class Checker : CliktCommand() {
         help = "folders to look for proofs and script files"
     )
         .multiple()
+
+    val defaultScript by option(
+        "--default-script", help = "A file holding a default script. Note, this option will disable " +
+                "the full-auto-macro as the default fallback."
+    )
+        .file(mustExist = true, canBeDir = false)
+
 
     private var choiceSettings: ChoiceSettings? = null
 
@@ -294,11 +299,13 @@ class Checker : CliktCommand() {
                             testCase.result = TestCaseKind.Skipped("Contract excluded by `--forbid-contract`.")
                             ignored++
                         }
+
                         dryRun -> {
                             printm("[INFO] Contract skipped by `--dry-run`")
                             testCase.result = TestCaseKind.Skipped("Contract skipped by `--dry-run`.")
                             ignored++
                         }
+
                         else -> {
                             when (runContract(pm, c)) {
                                 ProofState.Success -> successful++
@@ -306,6 +313,7 @@ class Checker : CliktCommand() {
                                     testCase.result = TestCaseKind.Failure("Proof not closeable.")
                                     failure++
                                 }
+
                                 ProofState.Skipped -> ignored++
                                 ProofState.Error -> error++
                             }
@@ -315,8 +323,8 @@ class Checker : CliktCommand() {
             }
             printm(
                 "[INFO] Summary for $inputFile: " +
-                    "(successful/ignored/failure) " +
-                    "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
+                        "(successful/ignored/failure) " +
+                        "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
             )
             if (failure != 0)
                 error("$inputFile failed!")
@@ -340,10 +348,12 @@ class Checker : CliktCommand() {
                 info("Proof found: $proofFile. Try loading.")
                 loadProof(proofFile)
             }
+
             scriptFile != null -> {
                 info("Script found: $scriptFile. Try proving.")
                 loadScript(ui, proof, scriptFile)
             }
+
             else -> {
                 if (verbose)
                     info("No proof or script found. Fallback to auto-mode.")
@@ -351,7 +361,7 @@ class Checker : CliktCommand() {
                     warn("Proof skipped because to `--no-auto-mode' switch is set.")
                     ProofState.Skipped
                 } else {
-                    runAutoMode(pc, proof)
+                    runDefaultFallback(ui, pc, proof)
                 }
             }
         }
@@ -364,11 +374,18 @@ class Checker : CliktCommand() {
                 error("✘ Proof open.")
                 debug("${proof.openGoals().size()} remains open")
             }
+
             ProofState.Error -> fail("Could not load proof due to exception in KeY.")
         }
         proof.dispose()
         return closed
     }
+
+    private fun runDefaultFallback(ui: AbstractUserInterfaceControl, pc: AbstractProofControl, proof: Proof)
+            : ProofState = defaultScript?.let { script ->
+        info("Using default script for fallback: $script. Try proving.")
+        loadScript(ui, proof, script)
+    } ?: runAutoMode(pc, proof)
 
     private fun runAutoMode(proofControl: AbstractProofControl, proof: Proof): ProofState {
         val time = measureTimeMillis {

@@ -2,8 +2,8 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
-    id("org.jetbrains.dokka") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.8.20"
+    id("org.jetbrains.dokka") version "1.8.20"
     `java-library`
     id("application")
     id("com.github.johnrengelman.shadow") version "7.1.2"
