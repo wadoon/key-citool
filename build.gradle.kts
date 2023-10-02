@@ -1,5 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.github.gradlenexus.publishplugin.NexusRepositoryContainer
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.time.Duration
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.20"
@@ -7,9 +9,13 @@ plugins {
     `java-library`
     id("application")
     id("com.github.johnrengelman.shadow") version "7.1.2"
+
+    `maven-publish`
+    signing
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1"
 }
 
-group = "io.github.wadoon"
+group = "io.github.wadoon.key"
 version = "1.5.0"
 
 
@@ -93,4 +99,57 @@ tasks.register<ShadowJar>("miniShadowJar") {
 
 application {
     mainClass.set("de.uka.ilkd.key.CheckerKt")
+}
+
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+//            from(components["kotlin"])
+
+            pom {
+                name = "key-ci-tool"
+                description = project.description
+                url = "https://github.com/wadoon/key-citool"
+                licenses {
+                    license {
+                        name = "GNU General Public License (GPL), Version 2"
+                        url = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "wadoon"
+                        name = "Alexander Weigl"
+                        email = "weigl@kit.edu"
+                    }
+                }
+                scm {
+                    connection = "git@github.com:wadoon/key-citool.git"
+                    url = "https://github.com/wadoon/key-citool"
+                }
+            }
+        }
+    }
+}
+
+nexusPublishing {
+    repositories(Action<NexusRepositoryContainer> {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+        }
+    })
+
+    // these are not strictly required. The default timeouts are set to 1 minute. But Sonatype can be really slow.
+    // If you get the error "java.net.SocketTimeoutException: timeout", these lines will help.
+    connectTimeout = Duration.ofMinutes(3)
+    clientTimeout = Duration.ofMinutes(3)
+}
+
+
+signing {
+    useGpgCmd()
+    sign(publishing.publications["mavenJava"])
 }
