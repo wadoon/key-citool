@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "io.github.wadoon.key"
-version = "1.5.0"
+version = "1.6.0"
 
 
 repositories {
@@ -30,7 +30,7 @@ configurations {
 
 
 repositories {
-    maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
+    //maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
 }
 
 dependencies {
@@ -51,8 +51,8 @@ dependencies {
     testImplementation("com.google.truth:truth:1.1.3")
     testImplementation("org.slf4j:slf4j-simple:1.7.33")
 
-    implementation("org.key_project:key.core:2.10.0")
-    implementation("org.key_project:key.util:2.10.0")
+    implementation("org.key-project:key.core:2.12.0")
+    implementation("org.key-project:key.util:2.12.0")
 }
 
 tasks.withType<KotlinCompile> {

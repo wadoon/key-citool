@@ -35,6 +35,7 @@ import de.uka.ilkd.key.control.AbstractProofControl
 import de.uka.ilkd.key.control.AbstractUserInterfaceControl
 import de.uka.ilkd.key.control.KeYEnvironment
 import de.uka.ilkd.key.control.UserInterfaceControl
+import de.uka.ilkd.key.java.Position
 import de.uka.ilkd.key.logic.PosInOccurrence
 import de.uka.ilkd.key.macros.*
 import de.uka.ilkd.key.macros.scripts.ProofScriptEngine
@@ -413,7 +414,7 @@ class Checker : CliktCommand() {
 
     private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: File): ProofState {
         val script = scriptFile.readText()
-        val engine = ProofScriptEngine(script, Location(scriptFile.toURL(), 1, 1))
+        val engine = ProofScriptEngine(script, Location(scriptFile.toURI(), Position.newOneBased(1, 1)))
         return try {
             val time = measureTimeMillis {
                 engine.execute(ui, proof)
@@ -466,7 +467,7 @@ class Checker : CliktCommand() {
                 it.pathToRoot.forEach {
                     val p = it.nodeInfo.activeStatement?.positionInfo
                     if (p != null) {
-                        visitLineOnClosedGoals.add(p.fileName to p.startPosition.line)
+                        visitLineOnClosedGoals.add(p.fileName to p.startPosition.line())
                     }
                 }
             }

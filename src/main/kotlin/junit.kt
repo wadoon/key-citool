@@ -17,11 +17,12 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 package de.uka.ilkd.key
+
 import java.io.Writer
 import java.util.*
 import kotlin.collections.ArrayList
 
-class XmlWriter(val stream: Writer) {
+class XmlWriter(private val stream: Writer) {
     fun write(s: String) = stream.write(s)
     fun attr(key: String, value: Any?) =
         value?.let {
@@ -58,19 +59,19 @@ data class TestSuites(
     MutableList<TestSuite> by impl {
 
     /** total number of successful tests from all testsuites. */
-    fun tests(): Int = sumBy { it.size }
+    fun tests(): Int = sumOf { it.size }
 
     /** total number of disabled tests from all testsuites. */
-    fun disabled(): Int = sumBy { it.disabled() }
+    fun disabled(): Int = sumOf { it.disabled() }
 
     /**total number of tests with error result from all testsuites.*/
-    fun errors(): Int = sumBy { it.errors() }
+    fun errors(): Int = sumOf { it.errors() }
 
     /** total number of failed tests from all testsuites. */
-    fun failures(): Int = sumBy { it.failures() }
+    fun failures(): Int = sumOf { it.failures() }
 
     /** time in seconds to execute all test suites. */
-    fun time(): Int = sumBy { it.time() }
+    fun time(): Int = sumOf { it.time() }
 
     fun writeXml(writer: Writer) = writeXml(XmlWriter(writer))
     fun writeXml(writer: XmlWriter) {
@@ -91,13 +92,14 @@ data class TestSuites(
         TestSuite(name).also { add(it) }
 }
 
+@Suppress("MemberVisibilityCanBePrivate")
 data class TestSuite(
     var name: String = "",
     private val impl: ArrayList<TestCase> = ArrayList()
 ) :
     MutableList<TestCase> by impl {
     /** Full (class) name of the test for non-aggregated testsuite documents.
-     Class name without the package for aggregated testsuites documents. Required */
+    Class name without the package for aggregated testsuites documents. Required */
     /** The total number of tests in the suite, required. */
     fun tests(): Int = size
 
@@ -105,11 +107,11 @@ data class TestSuite(
     fun disabled(): Int = filter { it.disabled }.size
 
     /** The total number of tests in the suite that errored. An errored test is one that had an unanticipated problem,
-     for example an unchecked throwable; or a problem with the implementation of the test. optional */
+    for example an unchecked throwable; or a problem with the implementation of the test. optional */
     fun errors(): Int = filter { it.errors }.size
 
     /** The total number of tests in the suite that failed. A failure is a test which the code has explicitly failed
-     by using the mechanisms for that purpose. e.g., via an assertEquals. optional */
+    by using the mechanisms for that purpose. e.g., via an assertEquals. optional */
     fun failures(): Int = filter { it.failures }.size
 
     /** Host on which the tests were executed. 'localhost' should be used if the hostname cannot be determined. optional */
@@ -144,7 +146,7 @@ data class TestSuite(
                 properties.forEach { (k, v) ->
                     element(
                         "property",
-                        "name" to k.toString(), "value" to v.toString()
+                        "name" to k, "value" to v.toString()
                     )
                 }
             }
@@ -158,7 +160,7 @@ data class TestSuite(
     var timestamp: String? = Date().toString()
 
     /**
-     property can appear multiple times. The name and value attributres are required.
+    property can appear multiple times. The name and value attributres are required.
      */
     val properties: MutableMap<String, Any?> = hashMapOf()
 }
@@ -205,7 +207,7 @@ data class TestCase(
             "time" to time
         ) {
 
-            result?.let { it.writeXml(writer) }
+            result.writeXml(writer)
 
             syserr?.let {
                 writer.element("system-err") {
@@ -242,10 +244,10 @@ sealed class TestCaseKind {
     }
 
     /** Indicates that the test errored. An errored test is one
-     that had an unanticipated problem. For example an unchecked
-     throwable or a problem with the implementation of the
-     test. Contains as a text node relevant data for the error,
-     for example a stack trace. optional */
+    that had an unanticipated problem. For example an unchecked
+    throwable or a problem with the implementation of the
+    test. Contains as a text node relevant data for the error,
+    for example a stack trace. optional */
     data class Error(
         /** The error message. e.g., if a java exception is thrown, the return value of getMessage() */
         val message: String?,
@@ -258,10 +260,10 @@ sealed class TestCaseKind {
     }
 
     /** Indicates that the test failed. A failure is a test which
-     the code has explicitly failed by using the mechanisms for
-     that purpose. For example via an assertEquals. Contains as
-     a text node relevant data for the failure, e.g., a stack
-     trace. optional */
+    the code has explicitly failed by using the mechanisms for
+    that purpose. For example via an assertEquals. Contains as
+    a text node relevant data for the failure, e.g., a stack
+    trace. optional */
     data class Failure(
         /** The message specified in the assert. */
         val message: String?,
