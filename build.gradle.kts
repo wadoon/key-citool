@@ -18,7 +18,7 @@ plugins {
 
 group = "io.github.wadoon.key"
 version = "1.6.0"
-
+description = "Tool for continuous integration of KeY proof files."
 
 repositories {
     mavenCentral()
@@ -28,7 +28,6 @@ val plugin: Configuration by configurations.creating
 configurations {
     implementation.get().extendsFrom(plugin)
 }
-
 
 repositories {
     mavenCentral()
