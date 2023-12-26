@@ -1,5 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.github.gradlenexus.publishplugin.NexusRepositoryContainer
+import org.jetbrains.kotlin.com.github.gundy.semver4j.SemVer
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
 
@@ -30,8 +31,11 @@ configurations {
 
 
 repositories {
-    //maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
+    mavenCentral()
+    maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
 }
+
+val key_version = System.getenv("KEY_VERSION") ?: "2.12.2"
 
 dependencies {
     val implementation by configurations
@@ -51,19 +55,24 @@ dependencies {
     testImplementation("com.google.truth:truth:1.1.3")
     testImplementation("org.slf4j:slf4j-simple:1.7.33")
 
-    implementation("org.key-project:key.core:2.12.0")
-    implementation("org.key-project:key.util:2.12.0")
+    when {
+        key_version.startsWith("2.10.") ->
+            implementation("org.key_project:key.core:$key_version")
+        //key_version.startsWith("2.12.") ->
+        else ->
+            implementation("org.key-project:key.core:$key_version")
+    }
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "11"
+        jvmTarget = if (key_version.startsWith("2.14.")) "17" else "11"
     }
 }
 
 tasks.withType<JavaCompile> {
-    options.release.set(11)
+    options.release = if (key_version.startsWith("2.14.")) 17 else 11
 }
 
 tasks.withType<Test> {

@@ -21,11 +21,6 @@ package de.uka.ilkd.key
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-/**
- *
- * @author Alexander Weigl
- * @version 1 (5/20/20)
- */
 
 class Cli {
     @Test
