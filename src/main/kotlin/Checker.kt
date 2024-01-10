@@ -91,7 +91,7 @@ class Checker : CliktCommand() {
     ).flag()
 
     val includes by option(
-        help = "defines additional key files to be included"
+        help = "defines an additional key file to be included (can be repeated)"
     ).multiple()
 
     val autoModeStep by option(
@@ -148,13 +148,13 @@ class Checker : CliktCommand() {
 
     val onlyContracts by option(
         "--contract",
-        help = "whitelist contracts by their names"
+        help = "include a contract by name (can be repeated)"
     )
         .multiple()
 
     val forbidContracts by option(
-        "--forbid-contact",
-        help = "forbid contracts by their name"
+        "--forbid-contract",
+        help = "exclude a contract by name (can be repeated)"
     )
         .multiple()
 
@@ -166,7 +166,7 @@ class Checker : CliktCommand() {
 
     val proofPath by option(
         "--proof-path",
-        help = "folders to look for proofs and script files"
+        help = "folder to look for proofs and script files (can be repeated)"
     )
         .multiple()
 
@@ -359,7 +359,7 @@ class Checker : CliktCommand() {
                 if (verbose)
                     info("No proof or script found. Fallback to auto-mode.")
                 if (disableAutoMode) {
-                    warn("Proof skipped because to `--no-auto-mode' switch is set.")
+                    warn("Proof skipped because `--no-auto-mode' switch is set.")
                     ProofState.Skipped
                 } else {
                     runDefaultFallback(ui, pc, proof)
