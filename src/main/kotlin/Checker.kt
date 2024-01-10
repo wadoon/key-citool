@@ -436,6 +436,13 @@ class Checker : CliktCommand() {
             return ProofState.Error
         }
 
+        val script = env.proofScript
+        if(script != null) {
+            info("Executing script from key file.")
+            val pse = ProofScriptEngine(script.first, script.second)
+            pse.execute(env.ui, env.loadedProof);
+        }
+
         try {
             val proof = env?.loadedProof
             try {
