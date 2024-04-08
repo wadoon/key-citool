@@ -13,7 +13,7 @@ plugins {
 
     `maven-publish`
     signing
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-2"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 group = "io.github.wadoon.key"
