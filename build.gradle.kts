@@ -13,7 +13,7 @@ plugins {
 
     `maven-publish`
     signing
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-2"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 group = "io.github.wadoon.key"
@@ -43,8 +43,8 @@ dependencies {
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     plugin("com.github.ajalt:clikt:2.8.0")
     plugin("org.jetbrains:annotations:24.1.0")
-    plugin("org.slf4j:slf4j-api:2.0.12")
-    plugin("org.slf4j:slf4j-simple:2.0.12")
+    plugin("org.slf4j:slf4j-api:2.0.13")
+    plugin("org.slf4j:slf4j-simple:2.0.13")
     plugin("com.google.code.gson:gson:2.10.1")
 
     val testImplementation by configurations
@@ -52,7 +52,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
     testImplementation("com.google.truth:truth:1.4.2")
-    testImplementation("org.slf4j:slf4j-simple:2.0.12")
+    testImplementation("org.slf4j:slf4j-simple:2.0.13")
 
     when {
         key_version.startsWith("2.10.") ->
