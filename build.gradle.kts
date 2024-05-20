@@ -45,7 +45,7 @@ dependencies {
     plugin("org.jetbrains:annotations:24.1.0")
     plugin("org.slf4j:slf4j-api:2.0.13")
     plugin("org.slf4j:slf4j-simple:2.0.13")
-    plugin("com.google.code.gson:gson:2.10.1")
+    plugin("com.google.code.gson:gson:2.11.0")
 
     val testImplementation by configurations
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
