@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.23"
+    id("org.jetbrains.kotlin.jvm") version "2.0.0"
     id("org.jetbrains.dokka") version "1.9.20"
     `java-library`
     id("application")
@@ -31,10 +31,15 @@ configurations {
 
 repositories {
     mavenCentral()
+
+    // for older key version (<=2.10.*)
     maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
+
+    // for snapshots after 2.12.0
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 
-val key_version = System.getenv("KEY_VERSION") ?: "2.12.2"
+val key_version = System.getenv("KEY_VERSION") ?: "2.13.0-SNAPSHOT"
 
 dependencies {
     val implementation by configurations
@@ -66,12 +71,12 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = if (key_version.startsWith("2.14.")) "17" else "11"
+        jvmTarget = "17"//if (key_version.startsWith("2.14.")) "17" else "11"
     }
 }
 
 tasks.withType<JavaCompile> {
-    options.release = if (key_version.startsWith("2.14.")) 17 else 11
+    options.release = 17 // if (key_version.startsWith("2.14.")) 17 else 11
 }
 
 tasks.withType<Test> {

@@ -77,6 +77,11 @@ script:
 
 ## Changelog
 
+* [1.6.0 (2023-10-24)](https://github.com/wadoon/key-citool/releases):
+  - Available on Maven Central
+  - Update of the dependencies
+  - Requires KeY-2.12.X (or higher) due to API change
+
 * [1.5.0 (2023-06-09)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0.jar):
   - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0-mini.jar)
   - [ADD] If you store your proof files under the non-default filename, you can enable 
