@@ -42,15 +42,15 @@ dependencies {
     plugin(platform("org.jetbrains.kotlin:kotlin-bom"))
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     plugin("com.github.ajalt:clikt:2.8.0")
-    plugin("org.jetbrains:annotations:24.1.0")
+    plugin("org.jetbrains:annotations:25.0.0")
     plugin("org.slf4j:slf4j-api:2.0.16")
     plugin("org.slf4j:slf4j-simple:2.0.16")
     plugin("com.google.code.gson:gson:2.11.0")
 
     val testImplementation by configurations
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.1")
     testImplementation("com.google.truth:truth:1.4.4")
     testImplementation("org.slf4j:slf4j-simple:2.0.16")
 
