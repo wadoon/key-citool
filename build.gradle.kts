@@ -1,6 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.github.gradlenexus.publishplugin.NexusRepositoryContainer
-import org.jetbrains.kotlin.com.github.gundy.semver4j.SemVer
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
 
@@ -17,7 +17,7 @@ plugins {
 }
 
 group = "io.github.wadoon.key"
-version = "1.6.0"
+version = "1.6.0-dev"
 description = "Tool for continuous integration of KeY proof files."
 
 repositories {
@@ -31,10 +31,11 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
+    //maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
+    //maven("https://s01.oss.sonatype.org/content/repositories/orgkey-project-1029")
 }
 
-val key_version = System.getenv("KEY_VERSION") ?: "2.12.2"
+val key_version = System.getenv("KEY_VERSION") ?: "2.12.3"
 
 dependencies {
     val implementation by configurations
@@ -64,14 +65,14 @@ dependencies {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
+    compilerOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = if (key_version.startsWith("2.14.")) "17" else "11"
+        jvmTarget = JvmTarget.JVM_21
     }
 }
 
 tasks.withType<JavaCompile> {
-    options.release = if (key_version.startsWith("2.14.")) 17 else 11
+    options.release = 21
 }
 
 tasks.withType<Test> {

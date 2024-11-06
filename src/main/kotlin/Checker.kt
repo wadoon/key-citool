@@ -53,6 +53,7 @@ import de.uka.ilkd.key.util.MiscTools
 import org.key_project.util.collection.ImmutableList
 import java.io.File
 import java.io.FileInputStream
+import java.net.URI
 import java.util.*
 import java.util.zip.GZIPInputStream
 import kotlin.system.exitProcess
@@ -287,7 +288,7 @@ class Checker : CliktCommand() {
             var error = 0
 
             val testSuite = testSuites.newTestSuite(inputFile)
-            ProofSettings.DEFAULT_SETTINGS.properties.forEach { t, u ->
+            ProofSettings.DEFAULT_SETTINGS.configuration.entries.forEach { (t, u) ->
                 testSuite.properties[t.toString()] = u
             }
 
@@ -437,7 +438,7 @@ class Checker : CliktCommand() {
         }
 
         val script = env.proofScript
-        if(script != null) {
+        if (script != null) {
             info("Executing script from key file.")
             val pse = ProofScriptEngine(script.first, script.second)
             pse.execute(env.ui, env.loadedProof);
@@ -469,12 +470,12 @@ class Checker : CliktCommand() {
         }
         if (enableMeasuring) {
             val closedGoals = proof.getClosedSubtreeGoals(proof.root())
-            val visitLineOnClosedGoals = HashSet<Pair<String, Int>>()
+            val visitLineOnClosedGoals = HashSet<Pair<URI, Int>>()
             closedGoals.forEach {
                 it.pathToRoot.forEach {
                     val p = it.nodeInfo.activeStatement?.positionInfo
                     if (p != null) {
-                        visitLineOnClosedGoals.add(p.fileName to p.startPosition.line())
+                        visitLineOnClosedGoals.add(p.uri.get() to p.startPosition.line())
                     }
                 }
             }
