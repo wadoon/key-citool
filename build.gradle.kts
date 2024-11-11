@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.0.0"
+    id("org.jetbrains.kotlin.jvm") version "2.0.21"
     id("org.jetbrains.dokka") version "1.9.20"
     `java-library`
     id("application")
@@ -43,17 +43,17 @@ dependencies {
     plugin(platform("org.jetbrains.kotlin:kotlin-bom"))
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     plugin("com.github.ajalt:clikt:2.8.0")
-    plugin("org.jetbrains:annotations:24.1.0")
-    plugin("org.slf4j:slf4j-api:2.0.13")
-    plugin("org.slf4j:slf4j-simple:2.0.13")
+    plugin("org.jetbrains:annotations:26.0.1")
+    plugin("org.slf4j:slf4j-api:2.0.16")
+    plugin("org.slf4j:slf4j-simple:2.0.16")
     plugin("com.google.code.gson:gson:2.11.0")
 
     val testImplementation by configurations
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
-    testImplementation("com.google.truth:truth:1.4.2")
-    testImplementation("org.slf4j:slf4j-simple:2.0.13")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.3")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
+    testImplementation("com.google.truth:truth:1.4.4")
+    testImplementation("org.slf4j:slf4j-simple:2.0.16")
 
     when {
         key_version.startsWith("2.10.") ->
