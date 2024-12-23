@@ -6,7 +6,7 @@ import java.time.Duration
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.1.0"
-    id("org.jetbrains.dokka") version "1.9.20"
+    id("org.jetbrains.dokka") version "2.0.0"
     `java-library`
     id("application")
     id("com.github.johnrengelman.shadow") version "8.1.1"
@@ -49,9 +49,9 @@ dependencies {
     plugin("com.google.code.gson:gson:2.11.0")
 
     val testImplementation by configurations
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.3")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.4")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.4")
     testImplementation("com.google.truth:truth:1.4.4")
     testImplementation("org.slf4j:slf4j-simple:2.0.16")
 
