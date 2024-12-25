@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package de.uka.ilkd.key
+package io.github.wadoon.keycitool
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
@@ -34,42 +34,38 @@ import de.uka.ilkd.key.api.ProofManagementApi
 import de.uka.ilkd.key.control.AbstractProofControl
 import de.uka.ilkd.key.control.AbstractUserInterfaceControl
 import de.uka.ilkd.key.control.KeYEnvironment
-import de.uka.ilkd.key.control.UserInterfaceControl
-import de.uka.ilkd.key.logic.PosInOccurrence
-import de.uka.ilkd.key.macros.*
+import de.uka.ilkd.key.java.Position
 import de.uka.ilkd.key.macros.scripts.ProofScriptEngine
 import de.uka.ilkd.key.parser.Location
 import de.uka.ilkd.key.proof.Goal
 import de.uka.ilkd.key.proof.Node
 import de.uka.ilkd.key.proof.Proof
 import de.uka.ilkd.key.proof.Statistics
-import de.uka.ilkd.key.prover.ProverTaskListener
 import de.uka.ilkd.key.settings.ChoiceSettings
 import de.uka.ilkd.key.settings.ProofSettings
 import de.uka.ilkd.key.speclang.Contract
 import de.uka.ilkd.key.util.KeYConstants
 import de.uka.ilkd.key.util.MiscTools
-import org.key_project.util.collection.ImmutableList
+import io.github.wadoon.keycitool.Ansi.BLUE
+import io.github.wadoon.keycitool.Ansi.GREEN
+import io.github.wadoon.keycitool.Ansi.RED
+import io.github.wadoon.keycitool.Ansi.colorfg
+import io.github.wadoon.keycitool.Ansi.debug
+import io.github.wadoon.keycitool.Ansi.fail
+import io.github.wadoon.keycitool.Ansi.fine
+import io.github.wadoon.keycitool.Ansi.info
+import io.github.wadoon.keycitool.Ansi.printBlock
+import io.github.wadoon.keycitool.Ansi.printm
+import io.github.wadoon.keycitool.Ansi.warn
+import io.github.wadoon.keycitool.junit.TestCaseKind
+import io.github.wadoon.keycitool.junit.TestSuites
 import java.io.File
 import java.io.FileInputStream
-import java.util.TreeMap
+import java.net.URI
+import java.util.*
 import java.util.zip.GZIPInputStream
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
-
-const val ESC = 27.toChar()
-const val RED = 31
-const val GREEN = 32
-const val YELLOW = 33
-const val BLUE = 34
-const val MAGENTA = 35
-const val CYAN = 36
-const val WHITE = 37
-
-fun colorfg(s: Any, c: Int) = "$ESC[${c}m$s$ESC[0m"
-fun colorbg(s: Any, c: Int) = "$ESC[${c + 10}m$s$ESC[0m"
 
 /**
  * A small interface for a checker scripts
@@ -81,7 +77,6 @@ class Checker : CliktCommand() {
 
     enum class ColorMode { YES, NO, AUTO }
 
-    var useColor: Boolean = false
     val color by option("--color").enum<ColorMode>().default(ColorMode.AUTO)
 
     val junitXmlOutput by option("--xml-output").file()
@@ -92,7 +87,7 @@ class Checker : CliktCommand() {
     ).flag()
 
     val includes by option(
-        help = "defines additional key files to be included"
+        help = "defines an additional key file to be included (can be repeated)"
     ).multiple()
 
     val autoModeStep by option(
@@ -128,13 +123,13 @@ class Checker : CliktCommand() {
     val appendStatistics by option(
         "--append-stat",
         help = "Normally, the `statisticsFile' is overriden by the ci-too. " +
-            "If set the statistics are appended to the JSON data structure."
+                "If set the statistics are appended to the JSON data structure."
     ).flag()
 
     val dryRun by option(
         "--dry-run",
         help = "skipping the proof reloading, scripts execution and auto mode." +
-            " Useful for finding the contract names"
+                " Useful for finding the contract names"
     ).flag()
 
     val classpath by option(
@@ -149,13 +144,13 @@ class Checker : CliktCommand() {
 
     val onlyContracts by option(
         "--contract",
-        help = "whitelist contracts by their names"
+        help = "include a contract by name (can be repeated)"
     )
         .multiple()
 
     val forbidContracts by option(
-        "--forbid-contact",
-        help = "forbid contracts by their name"
+        "--forbid-contract",
+        help = "exclude a contract by name (can be repeated)"
     )
         .multiple()
 
@@ -167,26 +162,25 @@ class Checker : CliktCommand() {
 
     val proofPath by option(
         "--proof-path",
-        help = "folders to look for proofs and script files"
+        help = "folder to look for proofs and script files (can be repeated)"
     )
         .multiple()
 
-    private var choiceSettings: ChoiceSettings? = null
+    val defaultScript by option(
+        "--default-script", help = "A file holding a default script. Note, this option will disable " +
+                "the full-auto-macro as the default fallback."
+    )
+        .file(mustExist = true, canBeDir = false)
 
-    private fun initEnvironment() {
-        if (!ProofSettings.isChoiceSettingInitialised()) {
-            val env: KeYEnvironment<*> = KeYEnvironment.load(File("."), null, null, null)
-            env.dispose()
-        }
-        choiceSettings = ProofSettings.DEFAULT_SETTINGS.choiceSettings
-    }
+
+    private var choiceSettings: ChoiceSettings? = null
 
     var errors = 0
 
     var testSuites = TestSuites()
 
     override fun run() {
-        useColor = when (color) {
+        Ansi.useColor = when (color) {
             ColorMode.YES -> true
             ColorMode.AUTO -> System.console() != null || System.getenv("GIT_PAGER_IN_USE") != null
             ColorMode.NO -> false
@@ -210,6 +204,7 @@ class Checker : CliktCommand() {
 
         statisticsFile?.let { statisticsFile ->
             val gson = GsonBuilder().disableJdkUnsafe().serializeNulls().setPrettyPrinting().create()
+
             if (appendStatistics) {
                 val stat = gson.fromJson(statisticsFile.readText(), TreeMap::class.java) as TreeMap<String, Any>
                 stat.putAll(statistics)
@@ -217,7 +212,6 @@ class Checker : CliktCommand() {
                     gson.toJson(stat, it)
                 }
             } else {
-                // statisticsFile.writeText(obj2json(statistics))
                 statisticsFile.bufferedWriter().use {
                     gson.toJson(statistics, it)
                 }
@@ -233,34 +227,6 @@ class Checker : CliktCommand() {
         exitProcess(errors)
     }
 
-    var currentPrintLevel = 0
-    fun printBlock(message: String, f: () -> Unit) {
-        info(message)
-        currentPrintLevel++
-        f()
-        currentPrintLevel--
-    }
-
-    fun printm(message: String, fg: Int? = null, bg: Int? = null) {
-        print("  ".repeat(currentPrintLevel))
-        val m =
-            when {
-                useColor -> message
-                fg != null && bg != null -> colorbg(colorfg(message, fg), bg)
-                fg != null -> colorfg(message, fg)
-                bg != null -> colorbg(message, bg)
-                else -> message
-            }
-        println(m)
-    }
-
-    fun error(message: String) = printm("[ERR ] $message", fg = RED)
-    fun fail(message: String) = printm("[FAIL] $message", fg = WHITE, bg = RED)
-    fun warn(message: String) = printm("[WARN] $message", fg = YELLOW)
-    fun info(message: String) = printm("[FINE] $message", fg = BLUE)
-    fun fine(message: String) = printm("[OK  ] $message", fg = GREEN)
-    fun debug(message: String) =
-        if (verbose) printm("[    ] $message", fg = GREEN) else Unit
 
     fun run(inputFile: String) {
         printBlock("Start with `$inputFile`") {
@@ -281,7 +247,7 @@ class Checker : CliktCommand() {
             var error = 0
 
             val testSuite = testSuites.newTestSuite(inputFile)
-            ProofSettings.DEFAULT_SETTINGS.properties.forEach { t, u ->
+            ProofSettings.DEFAULT_SETTINGS.configuration.entries.forEach { (t, u) ->
                 testSuite.properties[t.toString()] = u
             }
 
@@ -294,11 +260,13 @@ class Checker : CliktCommand() {
                             testCase.result = TestCaseKind.Skipped("Contract excluded by `--forbid-contract`.")
                             ignored++
                         }
+
                         dryRun -> {
                             printm("[INFO] Contract skipped by `--dry-run`")
                             testCase.result = TestCaseKind.Skipped("Contract skipped by `--dry-run`.")
                             ignored++
                         }
+
                         else -> {
                             when (runContract(pm, c)) {
                                 ProofState.Success -> successful++
@@ -306,6 +274,7 @@ class Checker : CliktCommand() {
                                     testCase.result = TestCaseKind.Failure("Proof not closeable.")
                                     failure++
                                 }
+
                                 ProofState.Skipped -> ignored++
                                 ProofState.Error -> error++
                             }
@@ -315,8 +284,8 @@ class Checker : CliktCommand() {
             }
             printm(
                 "[INFO] Summary for $inputFile: " +
-                    "(successful/ignored/failure) " +
-                    "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
+                        "(successful/ignored/failure) " +
+                        "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
             )
             if (failure != 0)
                 error("$inputFile failed!")
@@ -340,18 +309,20 @@ class Checker : CliktCommand() {
                 info("Proof found: $proofFile. Try loading.")
                 loadProof(proofFile)
             }
+
             scriptFile != null -> {
                 info("Script found: $scriptFile. Try proving.")
                 loadScript(ui, proof, scriptFile)
             }
+
             else -> {
                 if (verbose)
                     info("No proof or script found. Fallback to auto-mode.")
                 if (disableAutoMode) {
-                    warn("Proof skipped because to `--no-auto-mode' switch is set.")
+                    warn("Proof skipped because `--no-auto-mode' switch is set.")
                     ProofState.Skipped
                 } else {
-                    runAutoMode(pc, proof)
+                    runDefaultFallback(ui, pc, proof)
                 }
             }
         }
@@ -364,11 +335,18 @@ class Checker : CliktCommand() {
                 error("✘ Proof open.")
                 debug("${proof.openGoals().size()} remains open")
             }
+
             ProofState.Error -> fail("Could not load proof due to exception in KeY.")
         }
         proof.dispose()
         return closed
     }
+
+    private fun runDefaultFallback(ui: AbstractUserInterfaceControl, pc: AbstractProofControl, proof: Proof)
+            : ProofState = defaultScript?.let { script ->
+        info("Using default script for fallback: $script. Try proving.")
+        loadScript(ui, proof, script)
+    } ?: runAutoMode(pc, proof)
 
     private fun runAutoMode(proofControl: AbstractProofControl, proof: Proof): ProofState {
         val time = measureTimeMillis {
@@ -396,7 +374,7 @@ class Checker : CliktCommand() {
 
     private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: File): ProofState {
         val script = scriptFile.readText()
-        val engine = ProofScriptEngine(script, Location(scriptFile.toURL(), 1, 1))
+        val engine = ProofScriptEngine(script, Location(scriptFile.toURI(), Position.newOneBased(1, 1)))
         return try {
             val time = measureTimeMillis {
                 engine.execute(ui, proof)
@@ -416,6 +394,13 @@ class Checker : CliktCommand() {
         } catch (e: Exception) {
             error("Error during loading the KeY file. Exception: ${e.javaClass} ${e.message}")
             return ProofState.Error
+        }
+
+        val script = env.proofScript
+        if (script != null) {
+            info("Executing script from key file.")
+            val pse = ProofScriptEngine(script.first, script.second)
+            pse.execute(env.ui, env.loadedProof);
         }
 
         try {
@@ -444,12 +429,12 @@ class Checker : CliktCommand() {
         }
         if (enableMeasuring) {
             val closedGoals = proof.getClosedSubtreeGoals(proof.root())
-            val visitLineOnClosedGoals = HashSet<Pair<String, Int>>()
+            val visitLineOnClosedGoals = HashSet<Pair<URI, Int>>()
             closedGoals.forEach {
                 it.pathToRoot.forEach {
                     val p = it.nodeInfo.activeStatement?.positionInfo
                     if (p != null) {
-                        visitLineOnClosedGoals.add(p.fileName to p.startPosition.line)
+                        visitLineOnClosedGoals.add(p.uri.get() to p.startPosition.line())
                     }
                 }
             }
@@ -541,7 +526,7 @@ private fun generateSummary(proof: Proof): HashMap<String, Any> {
     return result
 }
 
-private fun extractContractName(it: File): String? {
+internal fun extractContractName(it: File): String? {
     val input = if (it.name.endsWith(".gz")) {
         GZIPInputStream(FileInputStream(it))
     } else {
@@ -553,62 +538,19 @@ private fun extractContractName(it: File): String? {
     }
 }
 
+/**
+ * State of a proof after execution of KeY.
+ */
 enum class ProofState {
-    Success, Failed, Skipped, Error
+    /** Execution was successfully finished, i.e., proof is closed. */
+    Success,
+
+    /** Proof could not be closed, no exception appeared. */
+    Failed,
+
+    /** Proof was skipped due to user options. */
+    Skipped,
+
+    /** Loading and proving resulted into an error. */
+    Error
 }
-
-internal fun obj2json(any: Any?): String =
-    when (any) {
-        null -> "null"
-        is String -> "\"$any\""
-        is Long, Int, Float, Double -> any.toString()
-        is Map<*, *> -> "{${any.entries.joinToString(",\n") { (k, v) -> "\"$k\" : ${obj2json(v)}" }}}"
-        is List<*> -> "[${any.joinToString(",") { obj2json(it) }}]"
-        else -> any.toString()
-    }
-
-//region Measuring
-class MeasuringMacro : SequentialProofMacro() {
-    val before = Stats()
-    val after = Stats()
-
-    override fun getName() = "MeasuringMacro"
-    override fun getCategory() = "ci-only"
-    override fun getDescription() = "like auto but with more swag"
-
-    override fun createProofMacroArray(): Array<ProofMacro> {
-        return arrayOf(
-            AutoPilotPrepareProofMacro(),
-            GatherStatistics(before),
-            AutoMacro(), // or TryCloseMacro()?
-            GatherStatistics(after)
-        )
-    }
-}
-
-data class Stats(var openGoals: Int = 0, var closedGoals: Int = 0)
-
-class GatherStatistics(val stats: Stats) : SkipMacro() {
-    override fun getName() = "gather-stats"
-    override fun getCategory() = "ci-only"
-    override fun getDescription() = "stat purpose"
-
-    override fun canApplyTo(
-        proof: Proof?,
-        goals: ImmutableList<Goal?>?,
-        posInOcc: PosInOccurrence?
-    ): Boolean = true
-
-    override fun applyTo(
-        uic: UserInterfaceControl?,
-        proof: Proof,
-        goals: ImmutableList<Goal?>?,
-        posInOcc: PosInOccurrence?,
-        listener: ProverTaskListener?
-    ): ProofMacroFinishedInfo? { // do nothing
-        stats.openGoals = proof.openGoals().size()
-        stats.closedGoals = proof.getClosedSubtreeGoals(proof.root()).size()
-        return super.applyTo(uic, proof, goals, posInOcc, listener)
-    }
-}
-//endregion

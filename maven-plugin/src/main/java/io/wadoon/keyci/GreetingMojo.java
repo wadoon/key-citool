@@ -1,4 +1,4 @@
-package io.wadoon.keyci;
+package io.github.wadoon.keycitool;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
