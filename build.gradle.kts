@@ -48,6 +48,8 @@ dependencies {
     plugin("org.slf4j:slf4j-simple:2.0.16")
     plugin("com.google.code.gson:gson:2.11.0")
 
+    plugin("org.apache.maven:maven-resolver-provider:3.9.9")
+
     val testImplementation by configurations
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.4")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")
@@ -161,4 +163,21 @@ nexusPublishing {
 signing {
     useGpgCmd()
     sign(publishing.publications["mavenJava"])
+}
+
+dokka {
+    moduleName.set("key-citool")
+    dokkaSourceSets.main {
+        includes.from("README.md")
+        sourceLink {
+            localDirectory.set(file("src/main/kotlin"))
+            remoteUrl("https://example.com/src")
+            remoteLineSuffix.set("#L")
+        }
+    }
+    pluginsConfiguration.html {
+        //customStyleSheets.from("styles.css")
+        //customAssets.from("logo.png")
+        footerMessage.set("(c) Your Company")
+    }
 }

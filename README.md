@@ -1,4 +1,4 @@
-# KeY: ci-tool 1.5.0
+# Module KeY: ci-tool 1.5.0
 
 ci-tool is a utility for supporting Java and JML contracts in Continuous Integration pipelines 
 by providing support for checking the proofability of JML with [KeY](https://key-project.org).

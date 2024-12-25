@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package de.uka.ilkd.key
+package io.github.wadoon.keycitool
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
@@ -34,23 +34,31 @@ import de.uka.ilkd.key.api.ProofManagementApi
 import de.uka.ilkd.key.control.AbstractProofControl
 import de.uka.ilkd.key.control.AbstractUserInterfaceControl
 import de.uka.ilkd.key.control.KeYEnvironment
-import de.uka.ilkd.key.control.UserInterfaceControl
 import de.uka.ilkd.key.java.Position
-import de.uka.ilkd.key.logic.PosInOccurrence
-import de.uka.ilkd.key.macros.*
 import de.uka.ilkd.key.macros.scripts.ProofScriptEngine
 import de.uka.ilkd.key.parser.Location
 import de.uka.ilkd.key.proof.Goal
 import de.uka.ilkd.key.proof.Node
 import de.uka.ilkd.key.proof.Proof
 import de.uka.ilkd.key.proof.Statistics
-import de.uka.ilkd.key.prover.ProverTaskListener
 import de.uka.ilkd.key.settings.ChoiceSettings
 import de.uka.ilkd.key.settings.ProofSettings
 import de.uka.ilkd.key.speclang.Contract
 import de.uka.ilkd.key.util.KeYConstants
 import de.uka.ilkd.key.util.MiscTools
-import org.key_project.util.collection.ImmutableList
+import io.github.wadoon.keycitool.Ansi.BLUE
+import io.github.wadoon.keycitool.Ansi.GREEN
+import io.github.wadoon.keycitool.Ansi.RED
+import io.github.wadoon.keycitool.Ansi.colorfg
+import io.github.wadoon.keycitool.Ansi.debug
+import io.github.wadoon.keycitool.Ansi.fail
+import io.github.wadoon.keycitool.Ansi.fine
+import io.github.wadoon.keycitool.Ansi.info
+import io.github.wadoon.keycitool.Ansi.printBlock
+import io.github.wadoon.keycitool.Ansi.printm
+import io.github.wadoon.keycitool.Ansi.warn
+import io.github.wadoon.keycitool.junit.TestCaseKind
+import io.github.wadoon.keycitool.junit.TestSuites
 import java.io.File
 import java.io.FileInputStream
 import java.net.URI
@@ -58,18 +66,6 @@ import java.util.*
 import java.util.zip.GZIPInputStream
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
-
-const val ESC = 27.toChar()
-const val RED = 31
-const val GREEN = 32
-const val YELLOW = 33
-const val BLUE = 34
-const val MAGENTA = 35
-const val CYAN = 36
-const val WHITE = 37
-
-fun colorfg(s: Any, c: Int) = "$ESC[${c}m$s$ESC[0m"
-fun colorbg(s: Any, c: Int) = "$ESC[${c + 10}m$s$ESC[0m"
 
 /**
  * A small interface for a checker scripts
@@ -81,7 +77,6 @@ class Checker : CliktCommand() {
 
     enum class ColorMode { YES, NO, AUTO }
 
-    var useColor: Boolean = false
     val color by option("--color").enum<ColorMode>().default(ColorMode.AUTO)
 
     val junitXmlOutput by option("--xml-output").file()
@@ -180,20 +175,12 @@ class Checker : CliktCommand() {
 
     private var choiceSettings: ChoiceSettings? = null
 
-    private fun initEnvironment() {
-        if (!ProofSettings.isChoiceSettingInitialised()) {
-            val env: KeYEnvironment<*> = KeYEnvironment.load(File("."), null, null, null)
-            env.dispose()
-        }
-        choiceSettings = ProofSettings.DEFAULT_SETTINGS.choiceSettings
-    }
-
     var errors = 0
 
     var testSuites = TestSuites()
 
     override fun run() {
-        useColor = when (color) {
+        Ansi.useColor = when (color) {
             ColorMode.YES -> true
             ColorMode.AUTO -> System.console() != null || System.getenv("GIT_PAGER_IN_USE") != null
             ColorMode.NO -> false
@@ -217,6 +204,7 @@ class Checker : CliktCommand() {
 
         statisticsFile?.let { statisticsFile ->
             val gson = GsonBuilder().disableJdkUnsafe().serializeNulls().setPrettyPrinting().create()
+
             if (appendStatistics) {
                 val stat = gson.fromJson(statisticsFile.readText(), TreeMap::class.java) as TreeMap<String, Any>
                 stat.putAll(statistics)
@@ -224,7 +212,6 @@ class Checker : CliktCommand() {
                     gson.toJson(stat, it)
                 }
             } else {
-                // statisticsFile.writeText(obj2json(statistics))
                 statisticsFile.bufferedWriter().use {
                     gson.toJson(statistics, it)
                 }
@@ -240,34 +227,6 @@ class Checker : CliktCommand() {
         exitProcess(errors)
     }
 
-    var currentPrintLevel = 0
-    fun printBlock(message: String, f: () -> Unit) {
-        info(message)
-        currentPrintLevel++
-        f()
-        currentPrintLevel--
-    }
-
-    fun printm(message: String, fg: Int? = null, bg: Int? = null) {
-        print("  ".repeat(currentPrintLevel))
-        val m =
-            when {
-                useColor -> message
-                fg != null && bg != null -> colorbg(colorfg(message, fg), bg)
-                fg != null -> colorfg(message, fg)
-                bg != null -> colorbg(message, bg)
-                else -> message
-            }
-        println(m)
-    }
-
-    fun error(message: String) = printm("[ERR ] $message", fg = RED)
-    fun fail(message: String) = printm("[FAIL] $message", fg = WHITE, bg = RED)
-    fun warn(message: String) = printm("[WARN] $message", fg = YELLOW)
-    fun info(message: String) = printm("[FINE] $message", fg = BLUE)
-    fun fine(message: String) = printm("[OK  ] $message", fg = GREEN)
-    fun debug(message: String) =
-        if (verbose) printm("[    ] $message", fg = GREEN) else Unit
 
     fun run(inputFile: String) {
         printBlock("Start with `$inputFile`") {
@@ -567,7 +526,7 @@ private fun generateSummary(proof: Proof): HashMap<String, Any> {
     return result
 }
 
-private fun extractContractName(it: File): String? {
+internal fun extractContractName(it: File): String? {
     val input = if (it.name.endsWith(".gz")) {
         GZIPInputStream(FileInputStream(it))
     } else {
@@ -579,62 +538,19 @@ private fun extractContractName(it: File): String? {
     }
 }
 
+/**
+ * State of a proof after execution of KeY.
+ */
 enum class ProofState {
-    Success, Failed, Skipped, Error
+    /** Execution was successfully finished, i.e., proof is closed. */
+    Success,
+
+    /** Proof could not be closed, no exception appeared. */
+    Failed,
+
+    /** Proof was skipped due to user options. */
+    Skipped,
+
+    /** Loading and proving resulted into an error. */
+    Error
 }
-
-internal fun obj2json(any: Any?): String =
-    when (any) {
-        null -> "null"
-        is String -> "\"$any\""
-        is Long, Int, Float, Double -> any.toString()
-        is Map<*, *> -> "{${any.entries.joinToString(",\n") { (k, v) -> "\"$k\" : ${obj2json(v)}" }}}"
-        is List<*> -> "[${any.joinToString(",") { obj2json(it) }}]"
-        else -> any.toString()
-    }
-
-//region Measuring
-class MeasuringMacro : SequentialProofMacro() {
-    val before = Stats()
-    val after = Stats()
-
-    override fun getName() = "MeasuringMacro"
-    override fun getCategory() = "ci-only"
-    override fun getDescription() = "like auto but with more swag"
-
-    override fun createProofMacroArray(): Array<ProofMacro> {
-        return arrayOf(
-            AutoPilotPrepareProofMacro(),
-            GatherStatistics(before),
-            AutoMacro(), // or TryCloseMacro()?
-            GatherStatistics(after)
-        )
-    }
-}
-
-data class Stats(var openGoals: Int = 0, var closedGoals: Int = 0)
-
-class GatherStatistics(val stats: Stats) : SkipMacro() {
-    override fun getName() = "gather-stats"
-    override fun getCategory() = "ci-only"
-    override fun getDescription() = "stat purpose"
-
-    override fun canApplyTo(
-        proof: Proof?,
-        goals: ImmutableList<Goal?>?,
-        posInOcc: PosInOccurrence?
-    ): Boolean = true
-
-    override fun applyTo(
-        uic: UserInterfaceControl?,
-        proof: Proof,
-        goals: ImmutableList<Goal?>?,
-        posInOcc: PosInOccurrence?,
-        listener: ProverTaskListener?
-    ): ProofMacroFinishedInfo? { // do nothing
-        stats.openGoals = proof.openGoals().size()
-        stats.closedGoals = proof.getClosedSubtreeGoals(proof.root()).size()
-        return super.applyTo(uic, proof, goals, posInOcc, listener)
-    }
-}
-//endregion
