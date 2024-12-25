@@ -8,9 +8,9 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [ 11, 17, 21 ]
-        key: [ "2.12.2", "2.12.1", "2.12.0", "2.10.0"]
-        os:  [ ubuntu-latest, macos-latest]
+        java: [ 21 ]
+        key: [ "2.12.3", "2.12.2", "2.12.1", "2.12.0", "2.10.0"]
+        os:  [ windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
