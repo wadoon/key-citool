@@ -1,4 +1,4 @@
-# Module KeY: ci-tool 1.5.0
+# KeY: ci-tool 1.4.0
 
 ci-tool is a utility for supporting Java and JML contracts in Continuous Integration pipelines 
 by providing support for checking the proofability of JML with [KeY](https://key-project.org).
@@ -32,28 +32,12 @@ To use the ci-tool add the following lines to the ci config.
    ```bash 
    $ java -jar <jarfile> [files]
    ```
-   
-For the minified version you need to add KeY to the classpath:
-
-   ```bash
-   $ java -cp ci-tool.jar:KeY-2.11.0-exe.jar de.uka.ilkd.key.CheckerKt 
-   ```
 
 4. Find more parameters with `-h`
   
    ```bash
    $ java -jar <jarfile> -h 
    ```
-
-
-### Development
-
-You can build ci-tool with `gradle`.
-```bash 
-gradle shadowJar miniShadowJar
-```
-The binaries are dropped in `build/libs/`.
-
 
 
 ### Examples
@@ -77,16 +61,12 @@ script:
 
 ## Changelog
 
-* [1.6.0-dev]() **HEAD** of main 
-  * Update to key-2.12.3, also update to Java 21
-
-* [1.5.0 (2023-06-09)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0.jar):
-  - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0-mini.jar)
+* [1.5.0-pre (2022-XX-XX)](https://formal.iti.kit.edu/ci-tool/ci-tool-XXX.jar):
+  - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-XXX-mini.jar)
   - [ADD] If you store your proof files under the non-default filename, you can enable 
     `--read-contract-names-from-file` in ci-tool, for detection based on content. 
   - [ADD] `--append-statistics` gives you the opportunity to accumulate the statistics of different runs into one file.
   - [ADD] `--color={auto,yes,no}` allows you to configure the use of colors
-  - [ADD] `--default-script <file>` to set a default proof script which is used instead of the full-auto-macro.
   - [ENH] more robustness on loading KeY proofs
 
 
@@ -127,8 +107,8 @@ script:
 
 ## Usage hints
 
-ci-tool uses the KeY's default contract names and filenames to find proof files. With the following script, you can 
-restore the filenames based on the stored contract names inside the file. 
+ci-tool uses the KeY's default contract names and filenames to find proof files. 
+With the following script, you can restore the filenames based on the stored contract names inside the file. 
 
 ```bash
 #!/bin/bash -x
