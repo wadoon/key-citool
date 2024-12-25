@@ -27,5 +27,5 @@ jobs:
           arguments: check
       - uses: actions/upload-artifact@v4
         with:
-          name: Reports
+          name: Reports-${{ matrix.os }}-${{ matrix.key }}
           path: build/reports
