@@ -1,22 +1,9 @@
 package io.github.wadoon.keycitool
 
 /**
- * Print the json notation for an arbitrary object.
- *
-internal fun obj2json(any: Any?): String =
-    when (any) {
-        null -> "null"
-        is String -> "\"$any\""
-        is Long, Int, Float, Double -> any.toString()
-        is Map<*, *> -> "{${any.entries.joinToString(",\n") { (k, v) -> "\"$k\" : ${obj2json(v)}" }}}"
-        is List<*> -> "[${any.joinToString(",") { obj2json(it) }}]"
-        else -> any.toString()
-    }
-*/
-
-/**
  * Helper and constants for printing ANSI codes on the terminal.
  */
+@Suppress("unused")
 object Ansi {
     const val ESC = 27.toChar()
     const val RED = 31

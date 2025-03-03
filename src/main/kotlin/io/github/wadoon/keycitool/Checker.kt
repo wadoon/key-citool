@@ -41,7 +41,6 @@ import de.uka.ilkd.key.proof.Goal
 import de.uka.ilkd.key.proof.Node
 import de.uka.ilkd.key.proof.Proof
 import de.uka.ilkd.key.proof.Statistics
-import de.uka.ilkd.key.settings.ChoiceSettings
 import de.uka.ilkd.key.settings.ProofSettings
 import de.uka.ilkd.key.speclang.Contract
 import de.uka.ilkd.key.util.KeYConstants
@@ -172,9 +171,6 @@ class Checker : CliktCommand() {
     )
         .file(mustExist = true, canBeDir = false)
 
-
-    private var choiceSettings: ChoiceSettings? = null
-
     var errors = 0
 
     var testSuites = TestSuites()
@@ -206,7 +202,7 @@ class Checker : CliktCommand() {
             val gson = GsonBuilder().disableJdkUnsafe().serializeNulls().setPrettyPrinting().create()
 
             if (appendStatistics) {
-                val stat = gson.fromJson(statisticsFile.readText(), TreeMap::class.java) as TreeMap<String, Any>
+                @Suppress("UNCHECKED_CAST") val stat = gson.fromJson(statisticsFile.readText(), TreeMap::class.java) as TreeMap<String, Any>
                 stat.putAll(statistics)
                 statisticsFile.bufferedWriter().use {
                     gson.toJson(stat, it)
@@ -296,7 +292,7 @@ class Checker : CliktCommand() {
         val proofApi = pm.startProof(contract)
         val proof = proofApi.proof
         require(proof != null)
-        proof.settings?.strategySettings?.maxSteps = autoModeStep
+        proof.settings.strategySettings?.maxSteps = autoModeStep
         ProofSettings.DEFAULT_SETTINGS.strategySettings.maxSteps = autoModeStep
 
         val proofFile = findProofFile(contract.name)
@@ -400,7 +396,7 @@ class Checker : CliktCommand() {
         if (script != null) {
             info("Executing script from key file.")
             val pse = ProofScriptEngine(script.first, script.second)
-            pse.execute(env.ui, env.loadedProof);
+            pse.execute(env.ui, env.loadedProof)
         }
 
         try {
@@ -484,6 +480,7 @@ private val Goal.pathToRoot: Sequence<Node>
         return generateSequence(node()) { it.parent() }
     }
 
+@Suppress("unused")
 private fun Proof.openClosedProgramBranches(): Pair<Int, Int> {
     val branchingNodes = this.root().subtreeIterator().asSequence()
         .filter { it.childrenCount() > 1 }

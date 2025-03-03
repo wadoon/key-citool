@@ -31,11 +31,9 @@ configurations {
 
 repositories {
     mavenCentral()
-    //maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
-    //maven("https://s01.oss.sonatype.org/content/repositories/orgkey-project-1029")
 }
 
-val key_version = System.getenv("KEY_VERSION") ?: "2.12.3"
+val keyVersion = System.getenv("KEY_VERSION") ?: "2.12.3"
 
 dependencies {
     val implementation by configurations
@@ -50,19 +48,20 @@ dependencies {
 
     plugin("org.apache.maven:maven-resolver-provider:3.9.9")
 
-    val testImplementation by configurations
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.12.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.12.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     testImplementation("com.google.truth:truth:1.4.4")
     testImplementation("org.slf4j:slf4j-simple:2.0.16")
 
     when {
-        key_version.startsWith("2.10.") ->
-            implementation("org.key_project:key.core:$key_version")
-        //key_version.startsWith("2.12.") ->
+        keyVersion.startsWith("2.10.") ->
+            implementation("org.key_project:key.core:$keyVersion")
         else ->
-            implementation("org.key-project:key.core:$key_version")
+            implementation("org.key-project:key.core:$keyVersion")
     }
 }
 

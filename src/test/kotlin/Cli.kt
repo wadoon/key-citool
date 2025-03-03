@@ -18,12 +18,12 @@
  */
 package io.github.wadoon.keycitool
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 
 class Cli {
     @Test
     fun empty() {
+        Checker().main(listOf("--help"))
     }
 }
