@@ -42,8 +42,8 @@ dependencies {
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     plugin("com.github.ajalt:clikt:2.8.0")
     plugin("org.jetbrains:annotations:26.0.2")
-    plugin("org.slf4j:slf4j-api:2.0.16")
-    plugin("org.slf4j:slf4j-simple:2.0.16")
+    plugin("org.slf4j:slf4j-api:2.0.17")
+    plugin("org.slf4j:slf4j-simple:2.0.17")
     plugin("com.google.code.gson:gson:2.12.1")
 
     plugin("org.apache.maven:maven-resolver-provider:3.9.9")
@@ -55,7 +55,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("com.google.truth:truth:1.4.4")
-    testImplementation("org.slf4j:slf4j-simple:2.0.16")
+    testImplementation("org.slf4j:slf4j-simple:2.0.17")
 
     when {
         keyVersion.startsWith("2.10.") ->
