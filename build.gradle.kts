@@ -44,11 +44,11 @@ dependencies {
     plugin("org.jetbrains:annotations:26.0.2")
     plugin("org.slf4j:slf4j-api:2.0.17")
     plugin("org.slf4j:slf4j-simple:2.0.17")
-    plugin("com.google.code.gson:gson:2.12.1")
+    plugin("com.google.code.gson:gson:2.13.1")
 
     plugin("org.apache.maven:maven-resolver-provider:3.9.9")
 
-    testImplementation(platform("org.junit:junit-bom:5.12.1"))
+    testImplementation(platform("org.junit:junit-bom:5.12.2"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
