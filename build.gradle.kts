@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.1.21"
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
     id("org.jetbrains.dokka") version "2.0.0"
     `java-library`
     id("application")
@@ -46,9 +46,9 @@ dependencies {
     plugin("org.slf4j:slf4j-simple:2.0.17")
     plugin("com.google.code.gson:gson:2.13.1")
 
-    plugin("org.apache.maven:maven-resolver-provider:3.9.9")
+    plugin("org.apache.maven:maven-resolver-provider:3.9.10")
 
-    testImplementation(platform("org.junit:junit-bom:5.13.0"))
+    testImplementation(platform("org.junit:junit-bom:5.13.2"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
