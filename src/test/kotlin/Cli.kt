@@ -18,13 +18,23 @@
  */
 package io.github.wadoon.keycitool
 
+import com.github.ajalt.clikt.core.MissingParameter
 import com.github.ajalt.clikt.core.main
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 
 class Cli {
     @Test
-    fun empty() {
+    fun help() {
         Checker().main(listOf("--help"))
+    }
+
+    @Test
+    fun empty() {
+        val c = Checker()
+        assertThrows<MissingParameter> {
+            c.parse(listOf())
+        }
     }
 }

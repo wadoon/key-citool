@@ -1,7 +1,6 @@
 package io.github.wadoon.keycitool
 
 import de.uka.ilkd.key.control.UserInterfaceControl
-import de.uka.ilkd.key.logic.PosInOccurrence
 import de.uka.ilkd.key.macros.AutoMacro
 import de.uka.ilkd.key.macros.AutoPilotPrepareProofMacro
 import de.uka.ilkd.key.macros.ProofMacro
@@ -10,7 +9,8 @@ import de.uka.ilkd.key.macros.SequentialProofMacro
 import de.uka.ilkd.key.macros.SkipMacro
 import de.uka.ilkd.key.proof.Goal
 import de.uka.ilkd.key.proof.Proof
-import de.uka.ilkd.key.prover.ProverTaskListener
+import org.key_project.prover.engine.ProverTaskListener
+import org.key_project.prover.sequent.PosInOccurrence
 import org.key_project.util.collection.ImmutableList
 
 //region Measuring

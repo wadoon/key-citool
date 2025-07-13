@@ -30,9 +30,12 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+    }
 }
 
-val keyVersion = System.getenv("KEY_VERSION") ?: "2.12.3"
+val keyVersion = System.getenv("KEY_VERSION") ?: "2.12.4-SNAPSHOT"
 
 dependencies {
     val implementation by configurations
