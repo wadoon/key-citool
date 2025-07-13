@@ -30,18 +30,15 @@ import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import com.google.gson.GsonBuilder
-import de.uka.ilkd.key.api.KeYApi
-import de.uka.ilkd.key.api.ProofManagementApi
 import de.uka.ilkd.key.control.AbstractProofControl
 import de.uka.ilkd.key.control.AbstractUserInterfaceControl
 import de.uka.ilkd.key.control.KeYEnvironment
-import de.uka.ilkd.key.java.Position
-import de.uka.ilkd.key.macros.scripts.ProofScriptEngine
-import de.uka.ilkd.key.parser.Location
+import de.uka.ilkd.key.nparser.ParsingFacade
 import de.uka.ilkd.key.proof.Goal
 import de.uka.ilkd.key.proof.Node
 import de.uka.ilkd.key.proof.Proof
 import de.uka.ilkd.key.proof.Statistics
+import de.uka.ilkd.key.scripts.ProofScriptEngine
 import de.uka.ilkd.key.settings.ProofSettings
 import de.uka.ilkd.key.speclang.Contract
 import de.uka.ilkd.key.util.KeYConstants
@@ -61,10 +58,12 @@ import io.github.wadoon.keycitool.Ansi.warn
 import io.github.wadoon.keycitool.junit.TestCaseKind
 import io.github.wadoon.keycitool.junit.TestSuites
 import java.io.File
-import java.io.FileInputStream
 import java.net.URI
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 import java.util.zip.GZIPInputStream
+import kotlin.io.path.*
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
@@ -177,7 +176,7 @@ class Checker : CliktCommand() {
 
     var testSuites = TestSuites()
 
-    override fun run() {
+    internal fun run0(): Int {
         Ansi.useColor = when (color) {
             ColorMode.YES -> true
             ColorMode.AUTO -> System.console() != null || System.getenv("GIT_PAGER_IN_USE") != null
@@ -192,7 +191,7 @@ class Checker : CliktCommand() {
         if (debug) {
             printm("Proof files and Scripts found: ")
             proofFileCandidates.forEach {
-                printm(it.absolutePath)
+                printm(" - " + it.absolute())
             }
         }
 
@@ -204,7 +203,9 @@ class Checker : CliktCommand() {
             val gson = GsonBuilder().disableJdkUnsafe().serializeNulls().setPrettyPrinting().create()
 
             if (appendStatistics) {
-                @Suppress("UNCHECKED_CAST") val stat = gson.fromJson(statisticsFile.readText(), TreeMap::class.java) as TreeMap<String, Any>
+                @Suppress("UNCHECKED_CAST")
+                val stat =
+                    gson.fromJson(statisticsFile.readText(), TreeMap::class.java) as TreeMap<String, Any>
                 stat.putAll(statistics)
                 statisticsFile.bufferedWriter().use {
                     gson.toJson(stat, it)
@@ -221,18 +222,21 @@ class Checker : CliktCommand() {
                 testSuites.writeXml(it)
             }
         }
+        return errors
+    }
 
-        exitProcess(errors)
+    override fun run() {
+        exitProcess(run0())
     }
 
 
     fun run(inputFile: String) {
         printBlock("Start with `$inputFile`") {
-            val pm = KeYApi.loadProof(
-                File(inputFile),
-                classpath.map { File(it) },
-                bootClassPath?.let { File(it) },
-                includes.map { File(it) }
+            val pm = KeYEnvironment.load(
+                Paths.get(inputFile),
+                classpath.map { Paths.get(it) },
+                bootClassPath?.let { Paths.get(it) },
+                includes.map { Paths.get(it) }
             )
 
             val contracts = pm.proofContracts
@@ -290,17 +294,16 @@ class Checker : CliktCommand() {
         }
     }
 
-    private fun runContract(pm: ProofManagementApi, contract: Contract): ProofState {
-        val proofApi = pm.startProof(contract)
-        val proof = proofApi.proof
+    private fun runContract(pm: KeYEnvironment<*>, contract: Contract): ProofState {
+        val proof = pm.createProof(contract.createProofObl(pm.initConfig))
         requireNotNull(proof)
         proof.settings.strategySettings?.maxSteps = autoModeStep
         ProofSettings.DEFAULT_SETTINGS.strategySettings.maxSteps = autoModeStep
 
         val proofFile = findProofFile(contract.name)
         val scriptFile = findScriptFile(contract.name)
-        val ui = proofApi.env.ui as AbstractUserInterfaceControl
-        val pc = proofApi.env.proofControl as AbstractProofControl
+        val ui = pm.ui as AbstractUserInterfaceControl
+        val pc = pm.proofControl as AbstractProofControl
 
         val closed = when {
             proofFile != null -> {
@@ -343,7 +346,7 @@ class Checker : CliktCommand() {
     private fun runDefaultFallback(ui: AbstractUserInterfaceControl, pc: AbstractProofControl, proof: Proof)
             : ProofState = defaultScript?.let { script ->
         info("Using default script for fallback: $script. Try proving.")
-        loadScript(ui, proof, script)
+        loadScript(ui, proof, script.toPath())
     } ?: runAutoMode(pc, proof)
 
     private fun runAutoMode(proofControl: AbstractProofControl, proof: Proof): ProofState {
@@ -370,9 +373,9 @@ class Checker : CliktCommand() {
         return if (proof.closed()) ProofState.Success else ProofState.Failed
     }
 
-    private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: File): ProofState {
-        val script = scriptFile.readText()
-        val engine = ProofScriptEngine(script, Location(scriptFile.toURI(), Position.newOneBased(1, 1)))
+    private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: Path): ProofState {
+        val script = ParsingFacade.parseScript(scriptFile)
+        val engine = ProofScriptEngine(script)
         return try {
             val time = measureTimeMillis {
                 engine.execute(ui, proof)
@@ -386,7 +389,7 @@ class Checker : CliktCommand() {
         }
     }
 
-    private fun loadProof(keyFile: File): ProofState {
+    private fun loadProof(keyFile: Path): ProofState {
         val env = try {
             KeYEnvironment.load(keyFile)
         } catch (e: Exception) {
@@ -397,7 +400,7 @@ class Checker : CliktCommand() {
         val script = env.proofScript
         if (script != null) {
             info("Executing script from key file.")
-            val pse = ProofScriptEngine(script.first, script.second)
+            val pse = ProofScriptEngine(script)
             pse.execute(env.ui, env.loadedProof)
         }
 
@@ -440,10 +443,10 @@ class Checker : CliktCommand() {
         }
     }
 
-    val proofFileCandidates: List<File> by lazy {
+    val proofFileCandidates: List<Path> by lazy {
         proofPath.asSequence()
-            .flatMap { File(it).walkTopDown().asSequence() }
-            .filter { it.isFile }
+            .flatMap { Paths.get(it).walk() }
+            .filter { it.isRegularFile() }
             .filter { it.name.endsWith(".proof") || it.name.endsWith(".proof.gz") }
             .toList()
             .sorted()
@@ -457,7 +460,7 @@ class Checker : CliktCommand() {
         }
     }
 
-    private fun findProofFile(contractName: String): File? =
+    private fun findProofFile(contractName: String): Path? =
         if (contractName in contractNameToProofFile) {
             contractNameToProofFile[contractName]
         } else {
@@ -468,7 +471,7 @@ class Checker : CliktCommand() {
             }
         }
 
-    private fun findScriptFile(filename: String): File? =
+    private fun findScriptFile(filename: String): Path? =
         proofFileCandidates.find {
             val name = it.name
             name.startsWith(filename) && (name.endsWith(".txt") || name.endsWith(".pscript"))
@@ -525,11 +528,11 @@ private fun generateSummary(proof: Proof): HashMap<String, Any> {
     return result
 }
 
-internal fun extractContractName(it: File): String? {
-    val input = if (it.name.endsWith(".gz")) {
-        GZIPInputStream(FileInputStream(it))
+internal fun extractContractName(it: Path): String? {
+    val input = if (it.extension == "gz") {
+        GZIPInputStream(it.inputStream())
     } else {
-        FileInputStream(it)
+        it.inputStream()
     }
     input.bufferedReader().use { incoming ->
         val contractLine = incoming.lineSequence().find { it.startsWith("name=") }
