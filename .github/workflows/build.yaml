@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         java: [ 21 ]
-        key: [ "2.12.3" ]
+        key: [ "2.12.4-SNAPSHOT" ]
               # Binary incompatible "2.12.x"
               # Version not on Maven Central: "2.10.0"
         os:  [ ubuntu-latest, macos-latest]
