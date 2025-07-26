@@ -77,8 +77,12 @@ script:
 
 ## Changelog
 
-* [1.6.0-dev]() **HEAD** of main 
-  * Update to key-2.12.3, also update to Java 21
+* [1.7.0-dev]() **HEAD** of main 
+  * [BRK] Update to `key-2.12.4-dev`
+
+* [1.6.0-dev](https://github.com/wadoon/key-citool/ci-tool-1.6.0.jar) 
+  [1.6.0-mini](https://github.com/wadoon/key-citool/ci-tool-1.6.0-mini.jar)
+  * [BRK] Update to `key-2.12.3`, also update to Java 21
 
 * [1.5.0 (2023-06-09)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0.jar):
   - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0-mini.jar)
