@@ -19,6 +19,7 @@
 package io.github.wadoon.keycitool
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.default
@@ -50,6 +51,7 @@ import io.github.wadoon.keycitool.Ansi.GREEN
 import io.github.wadoon.keycitool.Ansi.RED
 import io.github.wadoon.keycitool.Ansi.colorfg
 import io.github.wadoon.keycitool.Ansi.debug
+import io.github.wadoon.keycitool.Ansi.err
 import io.github.wadoon.keycitool.Ansi.fail
 import io.github.wadoon.keycitool.Ansi.fine
 import io.github.wadoon.keycitool.Ansi.info
@@ -121,7 +123,7 @@ class Checker : CliktCommand() {
 
     val appendStatistics by option(
         "--append-stat",
-        help = "Normally, the `statisticsFile' is overriden by the ci-too. " +
+        help = "Normally, the `statisticsFile' is overridden by the ci-tool. " +
                 "If set the statistics are appended to the JSON data structure."
     ).flag()
 
@@ -188,7 +190,7 @@ class Checker : CliktCommand() {
         printm("More information at: https://formal.iti.kit.edu/weigl/ci-tool/")
 
         if (debug) {
-            printm("Proof files and Sripts found: ")
+            printm("Proof files and Scripts found: ")
             proofFileCandidates.forEach {
                 printm(it.absolutePath)
             }
@@ -284,14 +286,14 @@ class Checker : CliktCommand() {
                         "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
             )
             if (failure != 0)
-                error("$inputFile failed!")
+                err("$inputFile failed!")
         }
     }
 
     private fun runContract(pm: ProofManagementApi, contract: Contract): ProofState {
         val proofApi = pm.startProof(contract)
         val proof = proofApi.proof
-        require(proof != null)
+        requireNotNull(proof)
         proof.settings.strategySettings?.maxSteps = autoModeStep
         ProofSettings.DEFAULT_SETTINGS.strategySettings.maxSteps = autoModeStep
 
@@ -328,7 +330,7 @@ class Checker : CliktCommand() {
             ProofState.Skipped -> warn("! Proof skipped.")
             ProofState.Failed -> {
                 errors++
-                error("✘ Proof open.")
+                err("✘ Proof open.")
                 debug("${proof.openGoals().size()} remains open")
             }
 
@@ -388,7 +390,7 @@ class Checker : CliktCommand() {
         val env = try {
             KeYEnvironment.load(keyFile)
         } catch (e: Exception) {
-            error("Error during loading the KeY file. Exception: ${e.javaClass} ${e.message}")
+            err("Error during loading the KeY file. Exception: ${e.javaClass} ${e.message}")
             return ProofState.Error
         }
 
@@ -426,8 +428,8 @@ class Checker : CliktCommand() {
         if (enableMeasuring) {
             val closedGoals = proof.getClosedSubtreeGoals(proof.root())
             val visitLineOnClosedGoals = HashSet<Pair<URI, Int>>()
-            closedGoals.forEach {
-                it.pathToRoot.forEach {
+            closedGoals.forEach { goal ->
+                goal.pathToRoot.forEach {
                     val p = it.nodeInfo.activeStatement?.positionInfo
                     if (p != null) {
                         visitLineOnClosedGoals.add(p.uri.get() to p.startPosition.line())
@@ -539,7 +541,7 @@ internal fun extractContractName(it: File): String? {
  * State of a proof after execution of KeY.
  */
 enum class ProofState {
-    /** Execution was successfully finished, i.e., proof is closed. */
+    /** The Execution was successfully finished, i.e., proof is closed. */
     Success,
 
     /** Proof could not be closed, no exception appeared. */

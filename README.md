@@ -1,4 +1,4 @@
-# Module KeY: ci-tool 1.5.0
+# Module KeY: ci-tool 1.6.0
 
 ci-tool is a utility for supporting Java and JML contracts in Continuous Integration pipelines 
 by providing support for checking the proofability of JML with [KeY](https://key-project.org).
@@ -80,11 +80,12 @@ script:
 * [1.7.0-dev]() **HEAD** of main 
   * [BRK] Update to `key-2.12.4-dev`
 
-* [1.6.0-dev](https://github.com/wadoon/key-citool/ci-tool-1.6.0.jar) 
-  [1.6.0-mini](https://github.com/wadoon/key-citool/ci-tool-1.6.0-mini.jar)
+* [1.6.0 (2025-07-26)](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-all.jar) 
+  [1.6.0-mini](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-mini.jar)
   * [BRK] Update to `key-2.12.3`, also update to Java 21
+  * [ENH] Loading of proof scripts from `.key` files
 
-* [1.5.0 (2023-06-09)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0.jar):
+* [1.5.0 (2023-06-09)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0-all.jar):
   - [Minimized Version for the use with different KeY version](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0-mini.jar)
   - [ADD] If you store your proof files under the non-default filename, you can enable 
     `--read-contract-names-from-file` in ci-tool, for detection based on content. 

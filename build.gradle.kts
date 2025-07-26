@@ -1,5 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import io.github.gradlenexus.publishplugin.NexusRepositoryContainer
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
@@ -17,7 +16,7 @@ plugins {
 }
 
 group = "io.github.wadoon.key"
-version = "1.6.0-dev"
+version = "1.6.0"
 description = "Tool for continuous integration of KeY proof files."
 
 repositories {
@@ -40,15 +39,15 @@ dependencies {
 
     plugin(platform("org.jetbrains.kotlin:kotlin-bom"))
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    plugin("com.github.ajalt:clikt:2.8.0")
+    plugin("com.github.ajalt.clikt:clikt:5.0.3")
     plugin("org.jetbrains:annotations:26.0.2")
     plugin("org.slf4j:slf4j-api:2.0.17")
     plugin("org.slf4j:slf4j-simple:2.0.17")
     plugin("com.google.code.gson:gson:2.13.1")
 
-    plugin("org.apache.maven:maven-resolver-provider:3.9.10")
+    //plugin("org.apache.maven:maven-resolver-provider:3.9.10")
 
-    testImplementation(platform("org.junit:junit-bom:5.13.2"))
+    testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -60,6 +59,7 @@ dependencies {
     when {
         keyVersion.startsWith("2.10.") ->
             implementation("org.key_project:key.core:$keyVersion")
+
         else ->
             implementation("org.key-project:key.core:$keyVersion")
     }
@@ -96,6 +96,7 @@ tasks.withType<Javadoc> {
 }
 
 tasks.register<ShadowJar>("miniShadowJar") {
+    description = "Build a small fatJar w/o key"
     group = "shadow"
     archiveClassifier.set("mini")
     from(sourceSets.getByName("main").output)
@@ -145,12 +146,13 @@ publishing {
 }
 
 nexusPublishing {
-    repositories(Action<NexusRepositoryContainer> {
+    repositories {
+        // see https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
         sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
         }
-    })
+    }
 
     // these are not strictly required. The default timeouts are set to 1 minute. But Sonatype can be really slow.
     // If you get the error "java.net.SocketTimeoutException: timeout", these lines will help.
@@ -177,6 +179,6 @@ dokka {
     pluginsConfiguration.html {
         //customStyleSheets.from("styles.css")
         //customAssets.from("logo.png")
-        footerMessage.set("(c) Your Company")
+        footerMessage.set("GPL-v2-only")
     }
 }

@@ -18,6 +18,7 @@
  */
 package io.github.wadoon.keycitool
 
+import com.github.ajalt.clikt.core.main
 import org.junit.jupiter.api.Test
 
 
