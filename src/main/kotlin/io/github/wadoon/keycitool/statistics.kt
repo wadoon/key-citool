@@ -13,7 +13,6 @@ import org.key_project.prover.engine.ProverTaskListener
 import org.key_project.prover.sequent.PosInOccurrence
 import org.key_project.util.collection.ImmutableList
 
-//region Measuring
 class MeasuringMacro : SequentialProofMacro() {
     val before = Stats()
     val after = Stats()
@@ -57,4 +56,3 @@ class GatherStatistics(val stats: Stats) : SkipMacro() {
         return super.applyTo(uic, proof, goals, posInOcc, listener)
     }
 }
-//endregion
