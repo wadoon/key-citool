@@ -42,7 +42,7 @@ object Ansi {
         println(m)
     }
 
-    fun error(message: String) = printm("[ERR ] $message", fg = RED)
+    fun err(message: String) = printm("[ERR ] $message", fg = RED)
     fun fail(message: String) = printm("[FAIL] $message", fg = WHITE, bg = RED)
     fun warn(message: String) = printm("[WARN] $message", fg = YELLOW)
     fun info(message: String) = printm("[FINE] $message", fg = BLUE)
