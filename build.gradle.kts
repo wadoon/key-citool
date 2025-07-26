@@ -37,8 +37,8 @@ val keyVersion = System.getenv("KEY_VERSION") ?: "2.12.3"
 dependencies {
     val implementation by configurations
 
-    plugin(platform("org.jetbrains.kotlin:kotlin-bom"))
-    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    //plugin(platform("org.jetbrains.kotlin:kotlin-bom:2.2.0"))
+    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.0")
     plugin("com.github.ajalt.clikt:clikt:5.0.3")
     plugin("org.jetbrains:annotations:26.0.2")
     plugin("org.slf4j:slf4j-api:2.0.17")
@@ -118,6 +118,14 @@ publishing {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
 //            from(components["kotlin"])
+
+            repositories{
+                maven {
+                    name = "folder"
+                    url = uri("$rootDir/release")
+                }
+            }
+
 
             pom {
                 name = "key-ci-tool"
