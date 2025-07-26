@@ -46,9 +46,9 @@ dependencies {
     plugin("org.slf4j:slf4j-simple:2.0.17")
     plugin("com.google.code.gson:gson:2.13.1")
 
-    plugin("org.apache.maven:maven-resolver-provider:3.9.10")
+    plugin("org.apache.maven:maven-resolver-provider:3.9.11")
 
-    testImplementation(platform("org.junit:junit-bom:5.13.2"))
+    testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
