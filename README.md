@@ -82,7 +82,7 @@ script:
 
 * [1.6.0 (2025-07-26)](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-all.jar) 
   [1.6.0-mini](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-mini.jar)
-  * [BRK] Update to `key-2.12.3`, also update to Java 21
+  * [BRK] Update to `key-2.12.3`, also update to Java 21. Binary incompatible with `key<2.12.3`.
   * [ENH] Loading of proof scripts from `.key` files
 
 * [1.5.0 (2023-06-09)](https://formal.iti.kit.edu/ci-tool/ci-tool-1.5.0-all.jar):

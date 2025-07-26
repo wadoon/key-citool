@@ -9,9 +9,12 @@ jobs:
     strategy:
       matrix:
         java: [ 21 ]
-        key: [ "2.12.3", "2.12.2", "2.12.1", "2.12.0", "2.10.0"]
+        key: [ "2.12.3" ]
+              # Binary incompatible "2.12.x"
+              # Version not on Maven Central: "2.10.0"
         os:  [ ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    continue-on-error: false
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK ${{ matrix.java }}
@@ -25,6 +28,8 @@ jobs:
         uses: gradle/actions/wrapper-validation@v4
 
       - run: ./gradlew check
+        env:
+          KEY_VERSION: ${{ matrix.key }}
 
       - uses: actions/upload-artifact@v4
         with:
