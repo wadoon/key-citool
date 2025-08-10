@@ -78,7 +78,7 @@ script:
 ## Changelog
 
 * [1.7.0-dev]() **HEAD** of main 
-  * [BRK] Update to `key-2.12.4-dev`
+  * [BRK] Update to `key-2.12.4-dev`. Only binary compatible with `key-2.12.4`. 
 
 * [1.6.0 (2025-07-26)](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-all.jar) 
   [1.6.0-mini](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-mini.jar)

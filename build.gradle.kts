@@ -8,7 +8,7 @@ plugins {
     id("org.jetbrains.dokka") version "2.0.0"
     `java-library`
     id("application")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.8"
 
     `maven-publish`
     signing
@@ -30,9 +30,6 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven {
-        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-    }
 }
 
 val keyVersion = System.getenv("KEY_VERSION") ?: "2.12.4-SNAPSHOT"
@@ -158,19 +155,19 @@ publishing {
 
 nexusPublishing {
     repositories {
-        // see https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
-        sonatype {
-            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+        create("central") {
+            nexusUrl = uri("https://ossrh-staging-api.central.sonatype.com/service/local/")
+            snapshotRepositoryUrl = uri("https://central.sonatype.com/repository/maven-snapshots/")
+
+            stagingProfileId.set("org.key-project")
+            val user: String = project.properties.getOrDefault("ossrhUsername", "").toString()
+            val pwd: String = project.properties.getOrDefault("ossrhPassword", "").toString()
+
+            username.set(user)
+            password.set(pwd)
         }
     }
-
-    // these are not strictly required. The default timeouts are set to 1 minute. But Sonatype can be really slow.
-    // If you get the error "java.net.SocketTimeoutException: timeout", these lines will help.
-    connectTimeout = Duration.ofMinutes(3)
-    clientTimeout = Duration.ofMinutes(3)
 }
-
 
 signing {
     useGpgCmd()
