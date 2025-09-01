@@ -4,11 +4,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.kotlin.jvm") version "2.2.10"
     id("org.jetbrains.dokka") version "2.0.0"
     `java-library`
     id("application")
-    id("com.gradleup.shadow") version "8.3.8"
+    id("com.gradleup.shadow") version "9.1.0"
 
     `maven-publish`
     signing
@@ -38,7 +38,7 @@ dependencies {
     val implementation by configurations
 
     //plugin(platform("org.jetbrains.kotlin:kotlin-bom:2.2.0"))
-    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.0")
+    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.10")
     plugin("com.github.ajalt.clikt:clikt:5.0.3")
     plugin("org.jetbrains:annotations:26.0.2")
     plugin("org.slf4j:slf4j-api:2.0.17")
