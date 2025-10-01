@@ -4,11 +4,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.Duration
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.2.10"
+    id("org.jetbrains.kotlin.jvm") version "2.2.20"
     id("org.jetbrains.dokka") version "2.0.0"
     `java-library`
     id("application")
-    id("com.gradleup.shadow") version "9.1.0"
+    id("com.gradleup.shadow") version "9.2.2"
 
     `maven-publish`
     signing
@@ -38,22 +38,22 @@ dependencies {
     val implementation by configurations
 
     //plugin(platform("org.jetbrains.kotlin:kotlin-bom:2.2.0"))
-    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.10")
+    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.20")
     plugin("com.github.ajalt.clikt:clikt:5.0.3")
-    plugin("org.jetbrains:annotations:26.0.2")
+    plugin("org.jetbrains:annotations:26.0.2-1")
     plugin("org.slf4j:slf4j-api:2.0.17")
     plugin("org.slf4j:slf4j-simple:2.0.17")
-    plugin("com.google.code.gson:gson:2.13.1")
+    plugin("com.google.code.gson:gson:2.13.2")
 
     //plugin("org.apache.maven:maven-resolver-provider:3.9.10")
 
-    testImplementation(platform("org.junit:junit-bom:5.13.4"))
+    testImplementation(platform("org.junit:junit-bom:6.0.0"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    testImplementation("com.google.truth:truth:1.4.4")
+    testImplementation("com.google.truth:truth:1.4.5")
     testImplementation("org.slf4j:slf4j-simple:2.0.17")
 
     when {
