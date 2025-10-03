@@ -21,6 +21,7 @@ description = "Tool for continuous integration of KeY proof files."
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://central.sonatype.com/repository/maven-snapshots") }
 }
 
 val plugin: Configuration by configurations.creating
