@@ -31,7 +31,7 @@ jobs:
         env:
           KEY_VERSION: ${{ matrix.key }}
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Reports-${{ matrix.os }}-${{ matrix.key }}
           path: build/reports
