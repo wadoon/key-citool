@@ -22,6 +22,7 @@ description = "Tool for continuous integration of KeY proof files."
 repositories {
     mavenCentral()
     maven { url = uri("https://central.sonatype.com/repository/maven-snapshots") }
+    maven{ url = uri("https://git.key-project.org/api/v4/projects/35/packages/maven")}
 }
 
 val plugin: Configuration by configurations.creating
@@ -33,7 +34,7 @@ repositories {
     mavenCentral()
 }
 
-val keyVersion = System.getenv("KEY_VERSION") ?: "2.12.4-SNAPSHOT"
+val keyVersion = System.getenv("KEY_VERSION") ?: "2.13.0-SNAPSHOT"
 
 dependencies {
     val implementation by configurations
