@@ -1,21 +1,103 @@
-name: Publish package to the Maven Central Repository
+name: Weekly Builds of key-citool
+
 on:
-  release:
-    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  JAVA_VERSION: 21
+
+
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Java
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
-          java-version: '21'
-          distribution: 'adopt'
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v3.5.0
-      - name: Publish package
-        run: gradle publish
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build with Gradle
+        run: ./gradlew --parallel assemble
+
+  # doc:
+  #   needs: [build]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v6
+  #     - name: Set up JDK ${{ env.JAVA_VERSION }}
+  #       uses: actions/setup-java@v5
+  #       with:
+  #         java-version: ${{ env.JAVA_VERSION }}
+  #         distribution: 'temurin'
+  #         cache: 'gradle'
+
+  #     - name: Setup Gradle
+  #       uses: gradle/actions/setup-gradle@v5
+
+  #     - name: Build Documentation with Gradle
+  #       run: ./gradlew alldoc
+
+  #     - name: Package
+  #       run: tar cvf key-javadoc.tar.xz build/docs/javadoc
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Upload Javadoc
+      #   uses: actions/upload-artifact@v6
+      #   with:
+      #     name: javadoc
+      #     path: "javadoc.tar.xz"
+
+      - name: Upload ShadowJar
+        uses: actions/upload-artifact@v6
+        with:
+          name: shadowjars
+          path: "*/build/libs/*.jar"
+
+      - name: Delete previous nightly release
+        continue-on-error: true
         env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete nightly --yes --cleanup-tag 
+
+      - name: Create nightly release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |          
+          gh release create --generate-notes --title "Nightly Release" \
+             --prerelease nightly build/libs/*.jar
+
+  # deploy-maven:
+  #   needs: [ build, doc ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v6
+  #     - name: Set up JDK ${{ env.JAVA_VERSION }}
+  #       uses: actions/setup-java@v5
+  #       with:
+  #         java-version: ${{ env.JAVA_VERSION }}
+  #         distribution: 'temurin'
+  #         cache: 'gradle'
+
+  #     - name: Setup Gradle
+  #       uses: gradle/actions/setup-gradle@v5
+
+  #     - name: Upload to SNAPSHOT repository
+  #       run: ./gradlew publishMavenJavaPublicationToKEYLABRepository
+  #       env:
+  #         BUILD_NUMBER: "SNAPSHOT"
+  #         GITLAB_DEPLOY_TOKEN: ${{ secrets.GITLAB_DEPLOY_TOKEN }}

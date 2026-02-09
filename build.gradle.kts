@@ -34,7 +34,7 @@ repositories {
     mavenCentral()
 }
 
-val keyVersion = System.getenv("KEY_VERSION") ?: "2.13.0-SNAPSHOT"
+val keyVersion = System.getenv("KEY_VERSION") ?: "2.13.0-dev"
 
 dependencies {
     val implementation by configurations
