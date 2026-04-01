@@ -24,7 +24,7 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build with Gradle
         run: ./gradlew --parallel assemble
@@ -42,7 +42,7 @@ jobs:
   #         cache: 'gradle'
 
   #     - name: Setup Gradle
-  #       uses: gradle/actions/setup-gradle@v5
+  #       uses: gradle/actions/setup-gradle@v6
 
   #     - name: Build Documentation with Gradle
   #       run: ./gradlew alldoc
@@ -94,7 +94,7 @@ jobs:
   #         cache: 'gradle'
 
   #     - name: Setup Gradle
-  #       uses: gradle/actions/setup-gradle@v5
+  #       uses: gradle/actions/setup-gradle@v6
 
   #     - name: Upload to SNAPSHOT repository
   #       run: ./gradlew publishMavenJavaPublicationToKEYLABRepository
