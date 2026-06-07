@@ -40,7 +40,11 @@ import de.uka.ilkd.key.proof.Proof
 import de.uka.ilkd.key.proof.Statistics
 import de.uka.ilkd.key.proof.io.ProofSaver
 import de.uka.ilkd.key.scripts.ProofScriptEngine
+import de.uka.ilkd.key.settings.DefaultSMTSettings
+import de.uka.ilkd.key.settings.ProofIndependentSettings
 import de.uka.ilkd.key.settings.ProofSettings
+import de.uka.ilkd.key.smt.*
+import de.uka.ilkd.key.smt.solvertypes.SolverType
 import de.uka.ilkd.key.speclang.Contract
 import de.uka.ilkd.key.util.KeYConstants
 import de.uka.ilkd.key.util.MiscTools
@@ -100,6 +104,8 @@ class Checker : CliktCommand() {
         help = "maximal amount of steps in auto-mode [default:10000]",
     ).int()
         .default(10000)
+
+    val smt by option("--z3", help = "run Z3 on open proofs").flag()
 
     val verbose by option("-v", "--verbose", help = "verbose output")
         .flag("--no-verbose")
@@ -406,6 +412,7 @@ class Checker : CliktCommand() {
                 } else {
                     try {
                         proofControl.startAndWaitForAutoMode(proof)
+                        if (smt) trySMTSolvers(proof)
                     } catch (e: Exception) {
                         fail("Error in KeY during auto mode. ${e.javaClass} : ${e.message}")
                         return ProofState.Error
@@ -427,6 +434,55 @@ class Checker : CliktCommand() {
         }
 
         return if (proof.closed()) ProofState.Success else ProofState.Failed
+    }
+
+    private fun trySMTSolvers(proof: Proof) {
+        if (!proof.closed()) {
+            val piSmtSettings = ProofIndependentSettings.DEFAULT_INSTANCE.smtSettings
+            val settings =
+                DefaultSMTSettings(
+                    proof.settings.smtSettings,
+                    piSmtSettings,
+                    proof.settings.newSMTSettings,
+                    proof,
+                )
+            var type: SolverType? = null
+            for (su in piSmtSettings.getSolverUnions(true)) {
+                info(su.toString())
+                if (su.name().equals("Z3")) {
+                    type = su.types.find { t -> t.solverCommand.uppercase().equals("Z3") }
+                    if (type != null) {
+                        break
+                    }
+                }
+            }
+            if (type != null) {
+                proof.openGoals().forEach { goal ->
+                    run {
+                        try {
+                            val smtProblem = SMTProblem(goal)
+                            val problems: ArrayList<SMTProblem?> = ArrayList<SMTProblem?>()
+                            problems.add(smtProblem)
+                            val launcher = SolverLauncher(settings)
+                            launcher.launch(listOf(type), problems, proof.services)
+                            if (smtProblem.getFinalResult().isValid() == SMTSolverResult.ThreeValuedTruth.VALID) {
+                                val smtRule = SMTRuleApp.RULE
+                                val name = smtProblem.successfulSolver.name()
+                                var app = smtRule.createApp(name)
+                                if (!app.complete()) {
+                                    app = app.tryToInstantiate(goal)
+                                }
+                                goal.apply(app)
+                            }
+                        } catch (e: Exception) {
+                            info("Problem launching $goal: ${e.message}")
+                        }
+                    }
+                }
+            } else {
+                info("Z3 not installed or in path. Skipping invocation.")
+            }
+        }
     }
 
     private fun loadScript(
