@@ -38,6 +38,7 @@ import de.uka.ilkd.key.proof.Goal
 import de.uka.ilkd.key.proof.Node
 import de.uka.ilkd.key.proof.Proof
 import de.uka.ilkd.key.proof.Statistics
+import de.uka.ilkd.key.proof.io.ProofSaver
 import de.uka.ilkd.key.scripts.ProofScriptEngine
 import de.uka.ilkd.key.settings.ProofSettings
 import de.uka.ilkd.key.speclang.Contract
@@ -165,6 +166,11 @@ class Checker : CliktCommand() {
         help = "folder to look for proofs and script files (can be repeated)"
     )
         .multiple()
+        
+    val outputProofPath by option(
+        "--output-proof-path",
+        help = "folder to save proofs (if provided proofs will be saved)"
+    ) .file(canBeFile = false, canBeDir = true)
 
     val defaultScript by option(
         "--default-script", help = "A file holding a default script. Note, this option will disable " +
@@ -370,6 +376,16 @@ class Checker : CliktCommand() {
             fine("Auto-mode took ${time / 1000.0} seconds.")
         }
         printStatistics(proof)
+
+        if (outputProofPath != null) {
+            outputProofPath?.mkdirs()
+            val file = outputProofPath?.resolve(MiscTools.toValidFileName(proof.name().toString()+".proof"))
+            file?.let { outputFile ->
+                val saver = ProofSaver(proof, outputFile.absolutePath, "")
+                saver.save()
+            }
+        }
+
         return if (proof.closed()) ProofState.Success else ProofState.Failed
     }
 
