@@ -310,8 +310,8 @@ class Checker : CliktCommand() {
             }
             printm(
                 "[INFO] Summary for $inputFile: " +
-                    "(successful/ignored/failure) " +
-                    "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})",
+                    "(successful/ignored/failure/error) " +
+                    "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)}/${colorfg(error, RED)})",
             )
             if (failure != 0) {
                 err("$inputFile failed!")
