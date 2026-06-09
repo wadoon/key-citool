@@ -1,7 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.time.Duration
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.4.0"
@@ -34,7 +33,7 @@ repositories {
     mavenCentral()
 }
 
-val keyVersion = System.getenv("KEY_VERSION") ?: "2.13.0-dev"
+val keyVersion = System.getenv("KEY_VERSION") ?: "3.0.0-SNAPSHOT"
 
 dependencies {
     val implementation by configurations

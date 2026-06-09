@@ -466,7 +466,7 @@ class Checker : CliktCommand() {
                             val launcher = SolverLauncher(settings)
                             launcher.launch(listOf(type), problems, proof.services)
                             if (smtProblem.getFinalResult().isValid() == SMTSolverResult.ThreeValuedTruth.VALID) {
-                                val smtRule = SMTRuleApp.RULE
+                                val smtRule = SMTRule.INSTANCE
                                 val name = smtProblem.successfulSolver.name()
                                 var app = smtRule.createApp(name)
                                 if (!app.complete()) {
