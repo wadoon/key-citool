@@ -68,6 +68,9 @@ import kotlin.io.path.*
 import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
+private const val PROOF_SUFFIX = ".proof"
+private const val PROOF_GZ_SUFFIX = ".proof.gz"
+
 /**
  * A small interface for a checker scripts
  * @author Alexander Weigl
@@ -84,18 +87,19 @@ class Checker : CliktCommand() {
 
     val enableMeasuring: Boolean by option(
         "--measuring",
-        help = "try to measure proof coverage"
+        help = "try to measure proof coverage",
     ).flag()
 
     val includes by option(
-        help = "defines an additional key file to be included (can be repeated)"
+        help = "defines an additional key file to be included (can be repeated)",
     ).multiple()
 
     val autoModeStep by option(
-        "--auto-mode-max-step", metavar = "INT",
-        help = "maximal amount of steps in auto-mode [default:10000]"
-    )
-        .int().default(10000)
+        "--auto-mode-max-step",
+        metavar = "INT",
+        help = "maximal amount of steps in auto-mode [default:10000]",
+    ).int()
+        .default(10000)
 
     val verbose by option("-v", "--verbose", help = "verbose output")
         .flag("--no-verbose")
@@ -105,89 +109,89 @@ class Checker : CliktCommand() {
 
     val readContractNames by option(
         "--read-contract-names-from-file",
-        help = "if set, the contract names are read from the proof file contents"
-    )
-        .flag()
+        help = "if set, the contract names are read from the proof file contents",
+    ).flag()
 
     val disableAutoMode by option(
         "--no-auto-mode",
-        help = "If set, only contracts with a proof script or proof are replayed."
-    )
-        .flag()
+        help = "If set, only contracts with a proof script or proof are replayed.",
+    ).flag()
 
     val statisticsFile: File? by option(
         "-s",
         "--statistics",
-        help = "if set, JSON files with proof statistics are written"
+        help = "if set, JSON files with proof statistics are written",
     ).file()
 
     val appendStatistics by option(
         "--append-stat",
-        help = "Normally, the `statisticsFile' is overridden by the ci-tool. " +
-                "If set the statistics are appended to the JSON data structure."
+        help =
+            "Normally, the `statisticsFile' is overridden by the ci-tool. " +
+                "If set the statistics are appended to the JSON data structure.",
     ).flag()
 
     val dryRun by option(
         "--dry-run",
-        help = "skipping the proof reloading, scripts execution and auto mode." +
-                " Useful for finding the contract names"
+        help =
+            "skipping the proof reloading, scripts execution and auto mode." +
+                " Useful for finding the contract names",
     ).flag()
 
     val classpath by option(
-        "--classpath", "-cp",
-        help = "additional classpaths"
+        "--classpath",
+        "-cp",
+        help = "additional classpaths",
     ).multiple()
 
     val bootClassPath by option(
-        "--bootClassPath", "-bcp",
-        help = "set the bootclasspath"
+        "--bootClassPath",
+        "-bcp",
+        help = "set the bootclasspath",
     )
 
     val onlyContracts by option(
         "--contract",
-        help = "include a contract by name (can be repeated)"
-    )
-        .multiple()
+        help = "include a contract by name (can be repeated)",
+    ).multiple()
 
     val forbidContracts by option(
         "--forbid-contract",
-        help = "exclude a contract by name (can be repeated)"
-    )
-        .multiple()
+        help = "exclude a contract by name (can be repeated)",
+    ).multiple()
 
     val inputFile by argument(
         "JAVA-KEY-FILE",
-        help = "key, java or a folder"
-    )
-        .multiple(true)
+        help = "key, java or a folder",
+    ).multiple(true)
 
     val proofPath by option(
         "--proof-path",
-        help = "folder to look for proofs and script files (can be repeated)"
-    )
-        .multiple()
-        
+        help = "folder to look for proofs and script files (can be repeated)",
+    ).multiple()
+
     val outputProofPath by option(
         "--output-proof-path",
-        help = "folder to save proofs (if provided proofs will be saved)"
-    ) .file(canBeFile = false, canBeDir = true)
+        help = "folder to save proofs (if provided proofs will be saved)",
+    ).file(canBeFile = false, canBeDir = true)
 
     val defaultScript by option(
-        "--default-script", help = "A file holding a default script. Note, this option will disable " +
-                "the full-auto-macro as the default fallback."
-    )
-        .file(mustExist = true, canBeDir = false)
+        "--default-script",
+        help =
+            "A file holding a default script. Note, this option will disable " +
+                "the full-auto-macro as the default fallback.",
+    ).file(mustExist = true, canBeDir = false)
 
     var errors = 0
 
     var testSuites = TestSuites()
 
     internal fun run0(): Int {
-        Ansi.useColor = when (color) {
-            ColorMode.YES -> true
-            ColorMode.AUTO -> System.console() != null || System.getenv("GIT_PAGER_IN_USE") != null
-            ColorMode.NO -> false
-        }
+        Ansi.useColor =
+            when (color) {
+                ColorMode.YES -> true
+                ColorMode.AUTO -> System.console() != null || System.getenv("GIT_PAGER_IN_USE") != null
+                ColorMode.NO -> false
+            }
 
         printm("KeY version: ${KeYConstants.VERSION}")
         printm("KeY internal: ${KeYConstants.INTERNAL_VERSION}")
@@ -206,7 +210,12 @@ class Checker : CliktCommand() {
         inputFile.forEach { run(it) }
 
         statisticsFile?.let { statisticsFile ->
-            val gson = GsonBuilder().disableJdkUnsafe().serializeNulls().setPrettyPrinting().create()
+            val gson =
+                GsonBuilder()
+                    .disableJdkUnsafe()
+                    .serializeNulls()
+                    .setPrettyPrinting()
+                    .create()
 
             if (appendStatistics) {
                 @Suppress("UNCHECKED_CAST")
@@ -235,18 +244,19 @@ class Checker : CliktCommand() {
         exitProcess(run0())
     }
 
-
     fun run(inputFile: String) {
         printBlock("Start with `$inputFile`") {
-            val pm = KeYEnvironment.load(
-                Paths.get(inputFile),
-                classpath.map { Paths.get(it) },
-                bootClassPath?.let { Paths.get(it) },
-                includes.map { Paths.get(it) }
-            )
+            val pm =
+                KeYEnvironment.load(
+                    Paths.get(inputFile),
+                    classpath.map { Paths.get(it) },
+                    bootClassPath?.let { Paths.get(it) },
+                    includes.map { Paths.get(it) },
+                )
 
-            val contracts = pm.proofContracts
-                .filter { it.name in onlyContracts || onlyContracts.isEmpty() }
+            val contracts =
+                pm.proofContracts
+                    .filter { it.name in onlyContracts || onlyContracts.isEmpty() }
 
             info("Found: ${contracts.size}")
             var successful = 0
@@ -277,14 +287,22 @@ class Checker : CliktCommand() {
 
                         else -> {
                             when (runContract(pm, c)) {
-                                ProofState.Success -> successful++
+                                ProofState.Success -> {
+                                    successful++
+                                }
+
                                 ProofState.Failed -> {
                                     testCase.result = TestCaseKind.Failure("Proof not closeable.")
                                     failure++
                                 }
 
-                                ProofState.Skipped -> ignored++
-                                ProofState.Error -> error++
+                                ProofState.Skipped -> {
+                                    ignored++
+                                }
+
+                                ProofState.Error -> {
+                                    error++
+                                }
                             }
                         }
                     }
@@ -292,15 +310,19 @@ class Checker : CliktCommand() {
             }
             printm(
                 "[INFO] Summary for $inputFile: " +
-                        "(successful/ignored/failure) " +
-                        "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})"
+                    "(successful/ignored/failure) " +
+                    "(${colorfg(successful, GREEN)}/${colorfg(ignored, BLUE)}/${colorfg(failure, RED)})",
             )
-            if (failure != 0)
+            if (failure != 0) {
                 err("$inputFile failed!")
+            }
         }
     }
 
-    private fun runContract(pm: KeYEnvironment<*>, contract: Contract): ProofState {
+    private fun runContract(
+        pm: KeYEnvironment<*>,
+        contract: Contract,
+    ): ProofState {
         val proof = pm.createProof(contract.createProofObl(pm.initConfig))
         requireNotNull(proof)
         proof.settings.strategySettings?.maxSteps = autoModeStep
@@ -311,67 +333,85 @@ class Checker : CliktCommand() {
         val ui = pm.ui as AbstractUserInterfaceControl
         val pc = pm.proofControl as AbstractProofControl
 
-        val closed = when {
-            proofFile != null -> {
-                info("Proof found: $proofFile. Try loading.")
-                loadProof(proofFile)
-            }
+        val closed =
+            when {
+                proofFile != null -> {
+                    info("Proof found: $proofFile. Try loading.")
+                    loadProof(proofFile)
+                }
 
-            scriptFile != null -> {
-                info("Script found: $scriptFile. Try proving.")
-                loadScript(ui, proof, scriptFile)
-            }
+                scriptFile != null -> {
+                    info("Script found: $scriptFile. Try proving.")
+                    loadScript(ui, proof, scriptFile)
+                }
 
-            else -> {
-                if (verbose)
-                    info("No proof or script found. Fallback to auto-mode.")
-                if (disableAutoMode) {
-                    warn("Proof skipped because `--no-auto-mode' switch is set.")
-                    ProofState.Skipped
-                } else {
-                    runDefaultFallback(ui, pc, proof)
+                else -> {
+                    if (verbose) {
+                        info("No proof or script found. Fallback to auto-mode.")
+                    }
+                    if (disableAutoMode) {
+                        warn("Proof skipped because `--no-auto-mode' switch is set.")
+                        ProofState.Skipped
+                    } else {
+                        runDefaultFallback(ui, pc, proof)
+                    }
                 }
             }
-        }
 
         when (closed) {
-            ProofState.Success -> fine("✔ Proof closed.")
-            ProofState.Skipped -> warn("! Proof skipped.")
+            ProofState.Success -> {
+                fine("✔ Proof closed.")
+            }
+
+            ProofState.Skipped -> {
+                warn("! Proof skipped.")
+            }
+
             ProofState.Failed -> {
                 errors++
                 err("✘ Proof open.")
                 debug("${proof.openGoals().size()} remains open")
             }
 
-            ProofState.Error -> fail("Could not load proof due to exception in KeY.")
+            ProofState.Error -> {
+                fail("Could not load proof due to exception in KeY.")
+            }
         }
         proof.dispose()
         return closed
     }
 
-    private fun runDefaultFallback(ui: AbstractUserInterfaceControl, pc: AbstractProofControl, proof: Proof)
-            : ProofState = defaultScript?.let { script ->
-        info("Using default script for fallback: $script. Try proving.")
-        loadScript(ui, proof, script.toPath())
-    } ?: runAutoMode(pc, proof)
+    private fun runDefaultFallback(
+        ui: AbstractUserInterfaceControl,
+        pc: AbstractProofControl,
+        proof: Proof,
+    ): ProofState =
+        defaultScript?.let { script ->
+            info("Using default script for fallback: $script. Try proving.")
+            loadScript(ui, proof, script.toPath())
+        } ?: runAutoMode(pc, proof)
 
-    private fun runAutoMode(proofControl: AbstractProofControl, proof: Proof): ProofState {
-        val time = measureTimeMillis {
-            if (enableMeasuring) {
-                val mm = MeasuringMacro()
-                proofControl.runMacro(proof.root(), mm, null)
-                proofControl.waitWhileAutoMode()
-                info("Proof has open/closed before: ${mm.before}")
-                info("Proof has open/closed after: ${mm.after}")
-            } else {
-                try {
-                    proofControl.startAndWaitForAutoMode(proof)
-                } catch (e: Exception) {
-                    fail("Error in KeY during auto mode. ${e.javaClass} : ${e.message}")
-                    return ProofState.Error
+    private fun runAutoMode(
+        proofControl: AbstractProofControl,
+        proof: Proof,
+    ): ProofState {
+        val time =
+            measureTimeMillis {
+                if (enableMeasuring) {
+                    val mm = MeasuringMacro()
+                    proofControl.runMacro(proof.root(), mm, null)
+                    proofControl.waitWhileAutoMode()
+                    info("Proof has open/closed before: ${mm.before}")
+                    info("Proof has open/closed after: ${mm.after}")
+                } else {
+                    try {
+                        proofControl.startAndWaitForAutoMode(proof)
+                    } catch (e: Exception) {
+                        fail("Error in KeY during auto mode. ${e.javaClass} : ${e.message}")
+                        return ProofState.Error
+                    }
                 }
             }
-        }
         if (verbose) {
             fine("Auto-mode took ${time / 1000.0} seconds.")
         }
@@ -379,7 +419,7 @@ class Checker : CliktCommand() {
 
         if (outputProofPath != null) {
             outputProofPath?.mkdirs()
-            val file = outputProofPath?.resolve(MiscTools.toValidFileName(proof.name().toString()+".proof"))
+            val file = outputProofPath?.resolve(MiscTools.toValidFileName(proof.name().toString() + PROOF_SUFFIX))
             file?.let { outputFile ->
                 val saver = ProofSaver(proof, outputFile.absolutePath, "")
                 saver.save()
@@ -389,13 +429,18 @@ class Checker : CliktCommand() {
         return if (proof.closed()) ProofState.Success else ProofState.Failed
     }
 
-    private fun loadScript(ui: AbstractUserInterfaceControl, proof: Proof, scriptFile: Path): ProofState {
+    private fun loadScript(
+        ui: AbstractUserInterfaceControl,
+        proof: Proof,
+        scriptFile: Path,
+    ): ProofState {
         val script = ParsingFacade.parseScript(scriptFile)
         val engine = ProofScriptEngine(script)
         return try {
-            val time = measureTimeMillis {
-                engine.execute(ui, proof)
-            }
+            val time =
+                measureTimeMillis {
+                    engine.execute(ui, proof)
+                }
             info("Script execution took ${time / 1000.0} seconds.")
             printStatistics(proof)
             if (proof.closed()) ProofState.Success else ProofState.Failed
@@ -406,12 +451,13 @@ class Checker : CliktCommand() {
     }
 
     private fun loadProof(keyFile: Path): ProofState {
-        val env = try {
-            KeYEnvironment.load(keyFile)
-        } catch (e: Exception) {
-            err("Error during loading the KeY file. Exception: ${e.javaClass} ${e.message}")
-            return ProofState.Error
-        }
+        val env =
+            try {
+                KeYEnvironment.load(keyFile)
+            } catch (e: Exception) {
+                err("Error during loading the KeY file. Exception: ${e.javaClass} ${e.message}")
+                return ProofState.Error
+            }
 
         val script = env.proofScript
         if (script != null) {
@@ -460,10 +506,11 @@ class Checker : CliktCommand() {
     }
 
     val proofFileCandidates: List<Path> by lazy {
-        proofPath.asSequence()
+        proofPath
+            .asSequence()
             .flatMap { Paths.get(it).walk() }
             .filter { it.isRegularFile() }
-            .filter { it.name.endsWith(".proof") || it.name.endsWith(".proof.gz") }
+            .filter { it.name.endsWith(PROOF_SUFFIX) || it.name.endsWith(PROOF_GZ_SUFFIX) }
             .toList()
             .sorted()
     }
@@ -483,7 +530,7 @@ class Checker : CliktCommand() {
             val filename = MiscTools.toValidFileName(contractName)
             proofFileCandidates.find {
                 val name = it.name
-                name.startsWith(filename) && (name.endsWith(".proof") || name.endsWith(".proof.gz"))
+                name.startsWith(filename) && (name.endsWith(PROOF_SUFFIX) || name.endsWith(PROOF_GZ_SUFFIX))
             }
         }
 
@@ -503,18 +550,25 @@ private val Goal.pathToRoot: Sequence<Node>
 
 @Suppress("unused")
 private fun Proof.openClosedProgramBranches(): Pair<Int, Int> {
-    val branchingNodes = this.root().subtreeIterator().asSequence()
-        .filter { it.childrenCount() > 1 }
-    val programBranchingNodes = branchingNodes.filter {
-        val childStmt = it.childrenIterator().asSequence().map { child ->
-            child.nodeInfo.activeStatement
+    val branchingNodes =
+        this
+            .root()
+            .subtreeIterator()
+            .asSequence()
+            .filter { it.childrenCount() > 1 }
+    val programBranchingNodes =
+        branchingNodes.filter {
+            val childStmt =
+                it.childrenIterator().asSequence().map { child ->
+                    child.nodeInfo.activeStatement
+                }
+            childStmt.any { c -> c != it.nodeInfo.activeStatement }
         }
-        childStmt.any { c -> c != it.nodeInfo.activeStatement }
-    }
 
-    val diverseProgramBranches = programBranchingNodes.filter { parent ->
-        !parent.isClosed && parent.childrenIterator().asSequence().any { it.isClosed }
-    }
+    val diverseProgramBranches =
+        programBranchingNodes.filter { parent ->
+            !parent.isClosed && parent.childrenIterator().asSequence().any { it.isClosed }
+        }
 
     return diverseProgramBranches.count() to programBranchingNodes.count()
 }
@@ -545,11 +599,12 @@ private fun generateSummary(proof: Proof): HashMap<String, Any> {
 }
 
 internal fun extractContractName(it: Path): String? {
-    val input = if (it.extension == "gz") {
-        GZIPInputStream(it.inputStream())
-    } else {
-        it.inputStream()
-    }
+    val input =
+        if (it.extension == "gz") {
+            GZIPInputStream(it.inputStream())
+        } else {
+            it.inputStream()
+        }
     input.bufferedReader().use { incoming ->
         val contractLine = incoming.lineSequence().find { it.startsWith("name=") }
         return contractLine?.trim()?.substring("name=".length)
@@ -570,5 +625,5 @@ enum class ProofState {
     Skipped,
 
     /** Loading and proving resulted into an error. */
-    Error
+    Error,
 }
