@@ -7,7 +7,7 @@ plugins {
     id("org.jetbrains.dokka") version "2.2.0"
     `java-library`
     id("application")
-    id("com.gradleup.shadow") version "9.4.2"
+    id("com.gradleup.shadow") version "9.4.3"
 
     `maven-publish`
     signing
@@ -48,7 +48,7 @@ dependencies {
 
     //plugin("org.apache.maven:maven-resolver-provider:3.9.10")
 
-    testImplementation(platform("org.junit:junit-bom:6.1.0"))
+    testImplementation(platform("org.junit:junit-bom:6.1.1"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
