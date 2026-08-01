@@ -491,11 +491,11 @@ class Checker : CliktCommand() {
         scriptFile: Path,
     ): ProofState {
         val script = ParsingFacade.parseScript(scriptFile)
-        val engine = ProofScriptEngine(script)
+        val engine = ProofScriptEngine(proof)
         return try {
             val time =
                 measureTimeMillis {
-                    engine.execute(ui, proof)
+                    engine.execute(ui, script)
                 }
             info("Script execution took ${time / 1000.0} seconds.")
             printStatistics(proof)
@@ -518,8 +518,8 @@ class Checker : CliktCommand() {
         val script = env.proofScript
         if (script != null) {
             info("Executing script from key file.")
-            val pse = ProofScriptEngine(script)
-            pse.execute(env.ui, env.loadedProof)
+            val pse = ProofScriptEngine(env.loadedProof)
+            pse.execute(env.ui, script)
         }
 
         try {

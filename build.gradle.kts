@@ -21,10 +21,10 @@ description = "Tool for continuous integration of KeY proof files."
 repositories {
     mavenCentral()
     maven { url = uri("https://central.sonatype.com/repository/maven-snapshots") }
-    maven{ url = uri("https://git.key-project.org/api/v4/projects/35/packages/maven")}
+    maven { url = uri("https://git.key-project.org/api/v4/projects/35/packages/maven") }
 }
 
-val plugin: Configuration by configurations.creating
+val plugin: Configuration = configurations.create("plugin")
 configurations {
     implementation.get().extendsFrom(plugin)
 }
@@ -33,12 +33,12 @@ repositories {
     mavenCentral()
 }
 
-val keyVersion = System.getenv("KEY_VERSION") ?: "3.0.0-SNAPSHOT"
+val keyVersion = System.getenv("KEY_VERSION") ?: "3.0.0"
 
 dependencies {
-    val implementation by configurations
+    val implementation = configurations.named("implementation")
 
-    //plugin(platform("org.jetbrains.kotlin:kotlin-bom:2.2.0"))
+    // plugin(platform("org.jetbrains.kotlin:kotlin-bom:2.2.0"))
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.10")
     plugin("com.github.ajalt.clikt:clikt:5.1.0")
     plugin("org.jetbrains:annotations:26.1.0")
@@ -46,7 +46,7 @@ dependencies {
     plugin("org.slf4j:slf4j-simple:2.0.18")
     plugin("com.google.code.gson:gson:2.14.0")
 
-    //plugin("org.apache.maven:maven-resolver-provider:3.9.10")
+    // plugin("org.apache.maven:maven-resolver-provider:3.9.10")
 
     testImplementation(platform("org.junit:junit-bom:6.1.2"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
@@ -113,20 +113,18 @@ application {
     mainClass.set("de.uka.ilkd.key.CheckerKt")
 }
 
-
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
 //            from(components["kotlin"])
 
-            repositories{
+            repositories {
                 maven {
                     name = "folder"
                     url = uri("$rootDir/release")
                 }
             }
-
 
             pom {
                 name = "key-ci-tool"
@@ -161,9 +159,8 @@ nexusPublishing {
             snapshotRepositoryUrl = uri("https://central.sonatype.com/repository/maven-snapshots/")
 
             stagingProfileId.set("org.key-project")
-            val user: String = project.properties.getOrDefault("ossrhUsername", "").toString()
-            val pwd: String = project.properties.getOrDefault("ossrhPassword", "").toString()
-
+            val user = project.findProperty("ossrhUsername")?.toString() ?: ""
+            val pwd = project.findProperty("ossrhPassword")?.toString() ?: ""
             username.set(user)
             password.set(pwd)
         }
@@ -186,8 +183,8 @@ dokka {
         }
     }
     pluginsConfiguration.html {
-        //customStyleSheets.from("styles.css")
-        //customAssets.from("logo.png")
+        // customStyleSheets.from("styles.css")
+        // customAssets.from("logo.png")
         footerMessage.set("GPL-v2-only")
     }
 }
