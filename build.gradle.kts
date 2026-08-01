@@ -3,11 +3,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.4.0"
+    id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.jetbrains.dokka") version "2.2.0"
     `java-library`
     id("application")
-    id("com.gradleup.shadow") version "9.4.3"
+    id("com.gradleup.shadow") version "9.6.1"
 
     `maven-publish`
     signing
@@ -39,7 +39,7 @@ dependencies {
     val implementation by configurations
 
     //plugin(platform("org.jetbrains.kotlin:kotlin-bom:2.2.0"))
-    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.0")
+    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.10")
     plugin("com.github.ajalt.clikt:clikt:5.1.0")
     plugin("org.jetbrains:annotations:26.1.0")
     plugin("org.slf4j:slf4j-api:2.0.18")
@@ -48,7 +48,7 @@ dependencies {
 
     //plugin("org.apache.maven:maven-resolver-provider:3.9.10")
 
-    testImplementation(platform("org.junit:junit-bom:6.1.1"))
+    testImplementation(platform("org.junit:junit-bom:6.1.2"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
