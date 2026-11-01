@@ -9,6 +9,7 @@ plugins {
     id("application")
     id("com.gradleup.shadow") version "9.6.1"
     id("jacoco")
+    id("net.razvan.jacoco-to-cobertura") version "2.0.0"
 
     `maven-publish`
     signing
@@ -96,6 +97,7 @@ tasks.jacocoTestReport {
         html.required.set(true)
         csv.required.set(false)
     }
+    finalizedBy(tasks.jacocoToCobertura)
 }
 
 java {
