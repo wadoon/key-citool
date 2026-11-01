@@ -3,11 +3,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.4.20"
+    id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.jetbrains.dokka") version "2.2.0"
     `java-library`
     id("application")
     id("com.gradleup.shadow") version "9.6.1"
+    id("jacoco")
 
     `maven-publish`
     signing
@@ -39,12 +40,12 @@ dependencies {
     val implementation = configurations.named("implementation")
 
     // plugin(platform("org.jetbrains.kotlin:kotlin-bom:2.2.0"))
-    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.20")
+    plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.21")
     plugin("com.github.ajalt.clikt:clikt:5.1.0")
     plugin("org.jetbrains:annotations:26.1.0")
     plugin("org.slf4j:slf4j-api:2.0.20")
     plugin("org.slf4j:slf4j-simple:2.0.20")
-    plugin("com.google.code.gson:gson:2.14.0")
+    plugin("com.google.code.gson:gson:2.15.0")
 
     // plugin("org.apache.maven:maven-resolver-provider:3.9.10")
 
@@ -84,6 +85,16 @@ tasks.withType<Test> {
     testLogging {
         events("passed", "skipped", "failed")
         showExceptions = true
+    }
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
     }
 }
 

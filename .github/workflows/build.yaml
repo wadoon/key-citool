@@ -1,15 +1,16 @@
 name: Java CI
 
 on:
-  - push
-  - pull_request
+  push:
+    branches: [ main ]
+  pull_request:
 
 jobs:
   build:
     strategy:
       matrix:
         java: [ 21 ]
-        key: [ "3.0.0-SNAPSHOT" ]
+        key: [ "3.0.0", "3.1.0-SNAPSHOT" ]
               # Binary incompatible "2.12.x"
               # Version not on Maven Central: "2.10.0"
         os:  [ ubuntu-latest, macos-latest]
@@ -21,15 +22,27 @@ jobs:
         uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'adopt'
+          distribution: 'temurin'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v6
 
-      - run: ./gradlew check
+      - name: Build & test
+        run: ./gradlew check
         env:
           KEY_VERSION: ${{ matrix.key }}
+
+      - name: Run code coverage report (JaCoCo)
+        run: ./gradlew jacocoTestReport
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: Coverage-${{ matrix.os }}-${{ matrix.key }}
+          path: |
+            build/reports/jacoco/test/jacocoTestReport.xml
+            build/reports/jacoco/test/html/
 
       - uses: actions/upload-artifact@v7
         with:
