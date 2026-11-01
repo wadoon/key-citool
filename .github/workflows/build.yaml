@@ -1,8 +1,9 @@
 name: Java CI
 
 on:
-  - push
-  - pull_request
+  push:
+    branches: [ main ]
+  pull_request:
 
 jobs:
   build:
@@ -27,9 +28,21 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v6
 
-      - run: ./gradlew check
+      - name: Build & test
+        run: ./gradlew check
         env:
           KEY_VERSION: ${{ matrix.key }}
+
+      - name: Run code coverage report (JaCoCo)
+        run: ./gradlew jacocoTestReport
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: Coverage-${{ matrix.os }}-${{ matrix.key }}
+          path: |
+            build/reports/jacoco/test/jacocoTestReport.xml
+            build/reports/jacoco/test/html/
 
       - uses: actions/upload-artifact@v7
         with:
