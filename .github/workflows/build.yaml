@@ -36,13 +36,3 @@ jobs:
         run: ./gradlew check
         env:
           KEY_VERSION: ${{ matrix.key }}
-
-      # Generates the JaCoCo report (shipped via the Reports-* artifact;
-      # GitHub's built-in code coverage is not available for this account).
-      - name: Generate code coverage report
-        run: ./gradlew jacocoTestReport
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: Reports-${{ matrix.os }}-${{ matrix.key }}
-          path: build/reports
