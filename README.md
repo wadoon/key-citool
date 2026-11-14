@@ -64,8 +64,8 @@ The binaries are dropped in `build/libs/`.
 
 * [1.8.0-SNAPSHOT]() **HEAD** of main
 
-* [1.7.0](2026-11-14) **HEAD** of main 
-  * [BRK] Update to `key-3.0.0`. Only binary compatible with `key-3.0.0`. 
+* [1.7.0 (2026-11-14)](https://github.com/wadoon/key-citool/releases/download/v1.7.0/key-citool-1.7.0-all.jar) [1.7.0-mini](https://github.com/wadoon/key-citool/releases/download/v1.7.0/key-citool-1.7.0-mini.jar)
+   * [BRK] Update to `key-3.0.0`. Only binary compatible with `key-3.0.0`. 
 
 * [1.6.0 (2025-07-26)](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-all.jar) 
   [1.6.0-mini](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-mini.jar)
