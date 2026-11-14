@@ -16,12 +16,9 @@ jobs:
         os:  [ ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     continue-on-error: false
-    permissions:
-      contents: read
-      code-quality: write
     steps:
-      # Check out the PR head commit (not the merge commit) so coverage line
-      # numbers map correctly to the diff.
+      # Check out the PR head commit (not the merge commit) so the build and
+      # tests run against the actual PR code.
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -40,20 +37,10 @@ jobs:
         env:
           KEY_VERSION: ${{ matrix.key }}
 
-      # Generates the JaCoCo report and converts it to Cobertura XML
-      # (build/reports/jacoco/test/cobertura-jacocoTestReport.xml).
+      # Generates the JaCoCo report (shipped via the Reports-* artifact;
+      # GitHub's built-in code coverage is not available for this account).
       - name: Generate code coverage report
         run: ./gradlew jacocoTestReport
-
-      # Upload coverage once (coverage is identical across the matrix), so
-      # GitHub's code quality bot can comment on pull requests.
-      - name: Upload coverage report
-        if: matrix.os == 'ubuntu-latest' && matrix.key == '3.0.0'
-        uses: actions/upload-code-coverage@v1
-        with:
-          file: build/reports/jacoco/test/cobertura-jacocoTestReport.xml
-          language: Java
-          label: code-coverage/jacoco
 
       - uses: actions/upload-artifact@v7
         with:

@@ -1,11 +1,13 @@
-# Module KeY: ci-tool 1.6.0
+# KeY-ci-tool 1.7.0
+
+![img.png](doc/logo.png)
 
 ci-tool is a utility for supporting Java and JML contracts in Continuous Integration pipelines 
 by providing support for checking the proofability of JML with [KeY](https://key-project.org).
 
 ci-tool is licensed under GPLv2+.
 
-If you any suggestion feel to contact: [Alexander Weigl](https://formal.iti.kit.edu/weigl).
+If you have any suggestion feel to contact: [Alexander Weigl](https://formal.iti.kit.edu/weigl).
 
 ## Usage:
 
@@ -16,15 +18,15 @@ To use the ci-tool add the following lines to the ci config.
    $ wget -O ci-tool.jar  https://formal.iti.kit.edu/weigl/ci-tool/latest.php?type=all
    ```
 
-  New with `1.3.0`, we also offer a minified version without an included KeY version.
-  You can get this version with
+   New with `1.3.0`, we also offer a minified version without an included KeY version.
+   You can get this version with
   
-  ```bash
-  $ wget -O ci-tool.jar  https://formal.iti.kit.edu/weigl/ci-tool/latest.php?type=mini
-  ```
+   ```bash
+   $ wget -O ci-tool.jar  https://formal.iti.kit.edu/weigl/ci-tool/latest.php?type=mini
+   ```
 
-  If you are using the `mini` version, you also need to add `KeY-2.X.Y-exe.jar` 
-  to your classpath. 
+   If you are using the `mini` version, you also need to add `KeY-2.X.Y-exe.jar` 
+   to your classpath. 
   
 2. Call ci-tool with your key-files or java file (or folder).
    ci-tool tries to verify all proofs automatically and uses found proofs or script files.
@@ -55,30 +57,15 @@ gradle shadowJar miniShadowJar
 The binaries are dropped in `build/libs/`.
 
 
-
-### Examples
-
-For travis-ci:
-
-```yaml
-jdk:
-  - openjdk11
-
-language: java
-install:
-  - wget -O ci-tool.jar  https://formal.iti.kit.edu/weigl/ci-tool/latest.php?type=all
-script:
-  - javac simplified/Keyserver.java
-  - java -jar ci-tool.jar simplified/Keyserver.java
-```
-
 [Check out this file for Github workflows.](https://github.com/KeYProject/verification-project-template/blob/main/.github/workflows/KeY-check.yml)
 
 
 ## Changelog
 
-* [1.7.0-dev]() **HEAD** of main 
-  * [BRK] Update to `key-2.12.4-dev`. Only binary compatible with `key-2.12.4`. 
+* [1.8.0-SNAPSHOT]() **HEAD** of main
+
+* [1.7.0](2026-11-14) **HEAD** of main 
+  * [BRK] Update to `key-3.0.0`. Only binary compatible with `key-3.0.0`. 
 
 * [1.6.0 (2025-07-26)](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-all.jar) 
   [1.6.0-mini](https://github.com/wadoon/key-citool/releases/download/v1.6.0/key-citool-1.6.0-mini.jar)

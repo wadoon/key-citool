@@ -17,13 +17,13 @@ plugins {
 }
 
 group = "io.github.wadoon.key"
-version = "1.7.0-SNAPSHOT"
+version = "1.7.0"
 description = "Tool for continuous integration of KeY proof files."
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://central.sonatype.com/repository/maven-snapshots") }
-    maven { url = uri("https://git.key-project.org/api/v4/projects/35/packages/maven") }
+    //maven { url = uri("https://central.sonatype.com/repository/maven-snapshots") }
+    //maven { url = uri("https://git.key-project.org/api/v4/projects/35/packages/maven") }
 }
 
 val plugin: Configuration = configurations.create("plugin")
