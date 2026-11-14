@@ -17,7 +17,7 @@ plugins {
 }
 
 group = "io.github.wadoon.key"
-version = "1.7.0-SNAPSHOT"
+version = "1.7.0"
 description = "Tool for continuous integration of KeY proof files."
 
 repositories {
