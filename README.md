@@ -1,4 +1,4 @@
-# KeY-ci-tool 1.7.0
+# KeY ci-tool 1.7.0
 
 ![img.png](doc/logo.png)
 
