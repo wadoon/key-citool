@@ -39,6 +39,7 @@ import de.uka.ilkd.key.proof.Node
 import de.uka.ilkd.key.proof.Proof
 import de.uka.ilkd.key.proof.Statistics
 import de.uka.ilkd.key.proof.io.ProofSaver
+import de.uka.ilkd.key.rule.AbstractBuiltInRuleApp
 import de.uka.ilkd.key.scripts.ProofScriptEngine
 import de.uka.ilkd.key.settings.DefaultSMTSettings
 import de.uka.ilkd.key.settings.ProofIndependentSettings
@@ -468,7 +469,7 @@ class Checker : CliktCommand() {
                             if (smtProblem.getFinalResult().isValid() == SMTSolverResult.ThreeValuedTruth.VALID) {
                                 val smtRule = SMTRule.INSTANCE
                                 val name = smtProblem.successfulSolver.name()
-                                var app = smtRule.createApp(name)
+                                var app: AbstractBuiltInRuleApp<SMTRule> = smtRule.createApp(name)
                                 if (!app.complete()) {
                                     app = app.tryToInstantiate(goal)
                                 }
