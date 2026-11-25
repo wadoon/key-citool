@@ -4,12 +4,12 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
-    id("org.jetbrains.dokka") version "2.2.0"
+    id("org.jetbrains.dokka") version "2.3.0"
     `java-library`
     id("application")
     id("com.gradleup.shadow") version "9.6.1"
     id("jacoco")
-    id("net.razvan.jacoco-to-cobertura") version "2.0.0"
+    id("net.razvan.jacoco-to-cobertura") version "3.0.0"
 
     `maven-publish`
     signing
@@ -42,7 +42,7 @@ dependencies {
 
     // plugin(platform("org.jetbrains.kotlin:kotlin-bom:2.2.0"))
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.21")
-    plugin("com.github.ajalt.clikt:clikt:5.1.0")
+    plugin("com.github.ajalt.clikt:clikt:5.2.1")
     plugin("org.jetbrains:annotations:26.1.0")
     plugin("org.slf4j:slf4j-api:2.0.20")
     plugin("org.slf4j:slf4j-simple:2.0.20")
